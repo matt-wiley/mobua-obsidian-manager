@@ -6,12 +6,15 @@ Entry points:
 """
 
 import hashlib
+import logging
 import uuid
 from pathlib import Path
 import sqlite3
 
 from db import queries
 from sync.parser import parse_file
+
+logger = logging.getLogger(__name__)
 
 
 # ---------------------------------------------------------------------------
@@ -24,8 +27,10 @@ def index_file(file_path: Path, vault_path: Path, conn: sqlite3.Connection) -> s
 
     existing = queries.get_record_by_file_path(conn, str(file_path))
     if existing and existing["content_hash"] == content_hash:
+        logger.debug("skipping %s (unchanged)", file_path.name)
         return existing["id"]
 
+    logger.info("indexing %s", file_path.name)
     parsed = parse_file(file_path, vault_path)
     record_id = _stable_uuid(file_path)
 

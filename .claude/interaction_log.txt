@@ -1,2 +1,7 @@
 2026-05-21 22:08 | Claude created a comprehensive `CLAUDE.md` documentation file covering the project's commands, three-layer architecture, module responsibilities, and key conventions based on the implementation plan specification.
 2026-05-21 22:14 | Claude outlined a two-phase implementation plan (backend setup with Flask health check, then frontend scaffolding with SvelteKit) and asked for the user's Obsidian vault path and preference on execution pace.
+2026-05-21 23:07 | Claude outlined Phase 1 work (parser, indexer, queries, and unit tests) and asked if the user wants to proceed with building it.
+2026-05-21 23:18 | User completed a task and Claude confirmed completion with "Done."
+2026-05-21 23:19 | Claude confirmed that Phase 1 of the indexing system is working correctly with 12 files across 4 folders, proper records, and correctly tagged wikilinks, and is ready to proceed to Phase 2.
+2026-05-21 23:20 | Claude explained that manual file changes won't automatically update the database until Phase 2's `watcher.py` is implemented, as the indexer currently requires explicit calls to `reindex_all()` or backend restart.
+2026-05-21 23:28 | Claude clarified that the uvicorn reload log is monitoring the backend directory for Python changes, not the vault, and instructed the user to look for a separate "watcher started" log line to confirm the vault watcher is running correctly.
