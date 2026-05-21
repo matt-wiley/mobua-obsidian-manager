@@ -5,3 +5,8 @@
 2026-05-21 23:19 | Claude confirmed that Phase 1 of the indexing system is working correctly with 12 files across 4 folders, proper records, and correctly tagged wikilinks, and is ready to proceed to Phase 2.
 2026-05-21 23:20 | Claude explained that manual file changes won't automatically update the database until Phase 2's `watcher.py` is implemented, as the indexer currently requires explicit calls to `reindex_all()` or backend restart.
 2026-05-21 23:28 | Claude clarified that the uvicorn reload log is monitoring the backend directory for Python changes, not the vault, and instructed the user to look for a separate "watcher started" log line to confirm the vault watcher is running correctly.
+2026-05-21 23:30 | Claude agreed to stop making commits and let the user handle all future commits independently.
+2026-05-21 23:32 | Claude completed a 43-part explanation by providing a logging level reference table showing which modules (db.connection, sync.indexer, sync.parser, sync.writer, sync.watcher) output at INFO, DEBUG, or WARNING levels during file synchronization operations.
+2026-05-21 23:33 | Claude clarified that "43/43" represents 43 passing tests out of 43 total in pytest output.
+2026-05-21 23:34 | Claude explained that the indexing system now generates a single log line from `sync.indexer` for every index event, whether triggered by startup reindexing or live file changes.
+2026-05-21 23:36 | User provided input without explicit content, and Claude acknowledged with a confirmation response.
