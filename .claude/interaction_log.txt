@@ -10,3 +10,5 @@
 2026-05-21 23:33 | Claude clarified that "43/43" represents 43 passing tests out of 43 total in pytest output.
 2026-05-21 23:34 | Claude explained that the indexing system now generates a single log line from `sync.indexer` for every index event, whether triggered by startup reindexing or live file changes.
 2026-05-21 23:36 | User provided input without explicit content, and Claude acknowledged with a confirmation response.
+2026-05-21 23:41 | Claude completed Phase 3 by building SSE event streaming, folder/record API endpoints with schema inference and relational queries, a sync repair endpoint, a file watcher with callbacks, and main.py router integration, leaving the system ready for Phase 4 SvelteKit frontend implementation.
+2026-05-21 23:43 | Claude identified that a test running `reindex_all` with a relative vault path created UUID mismatches with the server's absolute path, and fixed it by ensuring `index_file` always resolves paths to absolute before processing.

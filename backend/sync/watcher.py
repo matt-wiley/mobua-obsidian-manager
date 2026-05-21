@@ -1,18 +1,21 @@
 """Watch the vault for file changes and keep SQLite in sync.
 
 Usage:
-    observer = start_watcher(vault_path, conn)
+    observer = start_watcher(vault_path, conn, on_change=broadcast)
     # later:
     observer.stop()
     observer.join()
 
 The observer is wrapped in a restart loop so a crash doesn't kill sync.
+`on_change` is an optional callable that receives an event dict after each
+index or delete — used to push SSE events to connected clients.
 """
 
 import logging
 import sqlite3
 import threading
 import time
+from collections.abc import Callable
 from pathlib import Path
 
 from watchdog.events import FileSystemEvent, FileSystemEventHandler
@@ -25,10 +28,16 @@ logger = logging.getLogger(__name__)
 
 
 class _VaultHandler(FileSystemEventHandler):
-    def __init__(self, vault_path: Path, conn: sqlite3.Connection) -> None:
+    def __init__(
+        self,
+        vault_path: Path,
+        conn: sqlite3.Connection,
+        on_change: Callable[[dict], None] | None = None,
+    ) -> None:
         super().__init__()
         self.vault_path = vault_path
         self.conn = conn
+        self.on_change = on_change
 
     # ------------------------------------------------------------------
     # watchdog callbacks
@@ -47,12 +56,18 @@ class _VaultHandler(FileSystemEventHandler):
     def on_deleted(self, event: FileSystemEvent) -> None:
         if not self._relevant(event):
             return
+        row = queries.get_record_by_file_path(self.conn, event.src_path)
         queries.delete_record_by_file_path(self.conn, event.src_path)
         self.conn.commit()
         logger.info("deleted record for %s", event.src_path)
+        if row and self.on_change:
+            self.on_change({
+                "type": "record_deleted",
+                "folder_path": row["folder_path"],
+                "record_id": row["id"],
+            })
 
     def on_moved(self, event: FileSystemEvent) -> None:
-        # watchdog fires on_moved for renames
         src = Path(event.src_path)
         dest = Path(event.dest_path)
 
@@ -78,7 +93,14 @@ class _VaultHandler(FileSystemEventHandler):
 
     def _index(self, path: Path) -> None:
         try:
-            index_file(path, self.vault_path, self.conn)
+            record_id = index_file(path, self.vault_path, self.conn)
+            if self.on_change:
+                folder_path = _folder_path(path, self.vault_path)
+                self.on_change({
+                    "type": "record_changed",
+                    "folder_path": folder_path,
+                    "record_id": record_id,
+                })
         except Exception:
             logger.exception("failed to index %s", path)
 
@@ -87,23 +109,39 @@ def _is_obsidian(path: Path) -> bool:
     return ".obsidian" in path.parts
 
 
+def _folder_path(file_path: Path, vault_path: Path) -> str:
+    rel = file_path.relative_to(vault_path)
+    if len(rel.parts) < 2:
+        return ""
+    return "/".join(rel.parts[:-1]) + "/"
+
+
 # ---------------------------------------------------------------------------
 # Public API
 # ---------------------------------------------------------------------------
 
-def start_watcher(vault_path: Path, conn: sqlite3.Connection) -> Observer:
+def start_watcher(
+    vault_path: Path,
+    conn: sqlite3.Connection,
+    on_change: Callable[[dict], None] | None = None,
+) -> Observer:
     """Start a watchdog observer with auto-restart on crash. Returns the Observer."""
-    handler = _VaultHandler(vault_path, conn)
+    handler = _VaultHandler(vault_path, conn, on_change)
     observer = Observer()
     observer.schedule(handler, str(vault_path), recursive=True)
     observer.start()
     logger.info("watcher started on %s", vault_path)
 
-    _start_guardian(observer, vault_path, conn)
+    _start_guardian(observer, vault_path, conn, on_change)
     return observer
 
 
-def _start_guardian(observer: Observer, vault_path: Path, conn: sqlite3.Connection) -> None:
+def _start_guardian(
+    observer: Observer,
+    vault_path: Path,
+    conn: sqlite3.Connection,
+    on_change: Callable[[dict], None] | None,
+) -> None:
     """Background thread that restarts the observer if it dies."""
     def _guard():
         nonlocal observer
@@ -116,12 +154,10 @@ def _start_guardian(observer: Observer, vault_path: Path, conn: sqlite3.Connecti
                 except Exception:
                     pass
                 new_obs = Observer()
-                handler = _VaultHandler(vault_path, conn)
+                handler = _VaultHandler(vault_path, conn, on_change)
                 new_obs.schedule(handler, str(vault_path), recursive=True)
                 new_obs.start()
                 logger.info("watcher restarted")
-                # Replace the observer reference inside the thread so
-                # subsequent checks watch the new one.
                 observer = new_obs
 
     t = threading.Thread(target=_guard, daemon=True)

@@ -1,8 +1,14 @@
+import asyncio
 import logging
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
+from api import events
+from api.events import router as events_router
+from api.folders import router as folders_router
+from api.records import router as records_router
+from api.sync import router as sync_router
 from config import DB_PATH, VAULT_PATH
 from db.connection import close_db, get_connection, init_db
 from sync.indexer import reindex_all
@@ -24,7 +30,8 @@ async def lifespan(app: FastAPI):
     count = reindex_all(VAULT_PATH, conn)
     logger.info("reindex complete — %d files indexed", count)
 
-    observer = start_watcher(VAULT_PATH, conn)
+    events.set_loop(asyncio.get_running_loop())
+    observer = start_watcher(VAULT_PATH, conn, on_change=events.broadcast)
     yield
     observer.stop()
     observer.join()
@@ -32,6 +39,10 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(lifespan=lifespan)
+app.include_router(events_router)
+app.include_router(folders_router)
+app.include_router(records_router)
+app.include_router(sync_router)
 
 
 @app.get("/health")

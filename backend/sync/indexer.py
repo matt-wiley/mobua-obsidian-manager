@@ -23,6 +23,8 @@ logger = logging.getLogger(__name__)
 
 def index_file(file_path: Path, vault_path: Path, conn: sqlite3.Connection) -> str:
     """Parse and upsert a single .md file. Returns the record id."""
+    file_path = file_path.resolve()
+    vault_path = vault_path.resolve()
     content_hash = _md5(file_path)
 
     existing = queries.get_record_by_file_path(conn, str(file_path))
