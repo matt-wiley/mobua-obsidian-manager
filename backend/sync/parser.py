@@ -10,10 +10,13 @@ Returns:
     }
 """
 
+import logging
 import re
 from pathlib import Path
 
 import frontmatter as fm
+
+logger = logging.getLogger(__name__)
 
 _WIKILINK_RE = re.compile(r"\[\[(.+?)\]\]")
 _DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
@@ -24,6 +27,7 @@ _DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 # ---------------------------------------------------------------------------
 
 def parse_file(file_path: Path, vault_path: Path) -> dict:
+    logger.debug("parsing %s", file_path.name)
     raw = file_path.read_text(encoding="utf-8")
     post = fm.loads(raw)
 

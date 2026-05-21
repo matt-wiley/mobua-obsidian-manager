@@ -79,7 +79,6 @@ class _VaultHandler(FileSystemEventHandler):
     def _index(self, path: Path) -> None:
         try:
             index_file(path, self.vault_path, self.conn)
-            logger.info("indexed %s", path)
         except Exception:
             logger.exception("failed to index %s", path)
 

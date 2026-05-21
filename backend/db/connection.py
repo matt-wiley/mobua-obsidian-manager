@@ -1,5 +1,8 @@
+import logging
 import sqlite3
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 _conn: sqlite3.Connection | None = None
 
@@ -23,6 +26,7 @@ def init_db(db_path: Path) -> sqlite3.Connection:
     _conn.executescript(schema)
     _conn.commit()
 
+    logger.info("database ready at %s", db_path)
     return _conn
 
 
@@ -31,3 +35,4 @@ def close_db() -> None:
     if _conn is not None:
         _conn.close()
         _conn = None
+        logger.info("database connection closed")

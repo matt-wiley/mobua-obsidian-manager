@@ -9,10 +9,13 @@ Writes atomically: file.md.tmp → os.replace → file.md
 """
 
 import json
+import logging
 import os
 from pathlib import Path
 
 import yaml
+
+logger = logging.getLogger(__name__)
 
 
 def write_record(
@@ -40,6 +43,7 @@ def write_record(
     tmp = file_path.with_suffix(".md.tmp")
     tmp.write_text(content, encoding="utf-8")
     os.replace(tmp, file_path)
+    logger.info("wrote %s", file_path.name)
 
 
 # ---------------------------------------------------------------------------
