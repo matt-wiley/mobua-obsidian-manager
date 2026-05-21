@@ -8,11 +8,12 @@ A "Notion Lite" web UI backed by an Obsidian vault. Markdown files are the **onl
 
 ## Development Commands
 
-**Backend (Python 3.11+, in `backend/`):**
+**Backend (Python 3.12+, `uv` for package management, run from `backend/`):**
 ```bash
-uvicorn main:app --reload       # Dev server (port 8000)
-python -m pytest                # Run all tests
-python -m pytest tests/test_parser.py  # Run single test file
+uv run uvicorn main:app --reload            # Dev server (port 8000)
+uv run pytest                               # Run all tests
+uv run pytest tests/test_parser.py          # Run single test file
+uv add <package>                            # Add a dependency
 ```
 
 **Frontend (SvelteKit, in `frontend/`):**
