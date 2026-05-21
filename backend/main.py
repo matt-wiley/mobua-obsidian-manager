@@ -4,12 +4,18 @@ from fastapi import FastAPI
 
 from config import DB_PATH, VAULT_PATH
 from db.connection import close_db, get_connection, init_db
+from sync.indexer import reindex_all
+from sync.watcher import start_watcher
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    init_db(DB_PATH)
+    conn = init_db(DB_PATH)
+    reindex_all(VAULT_PATH, conn)
+    observer = start_watcher(VAULT_PATH, conn)
     yield
+    observer.stop()
+    observer.join()
     close_db()
 
 
