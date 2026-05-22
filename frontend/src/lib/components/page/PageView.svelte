@@ -26,7 +26,7 @@
 	async function commitTitle() {
 		editingTitle = false;
 		if (titleDraft.trim() && titleDraft !== record.filename) {
-			await recordsStore.update(record.id, { filename: titleDraft.trim() });
+			await save({ filename: titleDraft.trim() });
 		}
 	}
 
@@ -37,38 +37,41 @@
 
 	// --- Field and section data ----------------------------------------------
 
-	// Schema type lookup by field name
 	const schemaMap = $derived(
 		Object.fromEntries(schema.map((f) => [f.field_name, f]))
 	);
 
-	// Frontmatter entries from the record (in key order), with resolved type
 	const fmEntries = $derived(
 		Object.keys(record.frontmatter).map((key) => ({
 			key,
-			value:
-				record.frontmatter[key] != null ? String(record.frontmatter[key]) : '',
+			value: record.frontmatter[key] != null ? String(record.frontmatter[key]) : '',
 			type: schemaMap[key]?.field_type ?? 'text'
 		}))
 	);
 
-	// Section entries in insertion order
 	const sectionEntries = $derived(Object.entries(record.sections));
 
-	// --- Save handlers -------------------------------------------------------
+	// --- Save with error handling --------------------------------------------
+
+	let saveError = $state<string | null>(null);
+	let errorTimer: ReturnType<typeof setTimeout> | null = null;
+
+	async function save(patch: RecordUpdate) {
+		try {
+			await recordsStore.update(record.id, patch);
+		} catch (e) {
+			saveError = e instanceof Error ? e.message : 'Save failed';
+			if (errorTimer) clearTimeout(errorTimer);
+			errorTimer = setTimeout(() => { saveError = null; }, 4000);
+		}
+	}
 
 	async function saveField(key: string, value: string) {
-		const patch: RecordUpdate = {
-			frontmatter: { ...record.frontmatter, [key]: value }
-		};
-		await recordsStore.update(record.id, patch);
+		await save({ frontmatter: { ...record.frontmatter, [key]: value } });
 	}
 
 	async function saveSection(sectionTitle: string, value: string) {
-		const patch: RecordUpdate = {
-			sections: { ...record.sections, [sectionTitle]: value }
-		};
-		await recordsStore.update(record.id, patch);
+		await save({ sections: { ...record.sections, [sectionTitle]: value } });
 	}
 
 	async function renameSectionTitle(oldTitle: string, newTitle: string) {
@@ -76,11 +79,15 @@
 		for (const [k, v] of Object.entries(record.sections)) {
 			newSections[k === oldTitle ? newTitle : k] = v as string;
 		}
-		await recordsStore.update(record.id, { sections: newSections });
+		await save({ sections: newSections });
 	}
 </script>
 
 <div class="page-view">
+	{#if saveError}
+		<div class="save-error" role="alert">{saveError}</div>
+	{/if}
+
 	<!-- Title -->
 	<div class="title-row">
 		{#if editingTitle}
@@ -128,6 +135,15 @@
 <style>
 	.page-view {
 		max-width: 760px;
+	}
+	.save-error {
+		background: #fee2e2;
+		color: #991b1b;
+		border: 1px solid #fca5a5;
+		border-radius: 6px;
+		padding: 8px 12px;
+		font-size: 0.875rem;
+		margin-bottom: 12px;
 	}
 	.title-row {
 		margin-bottom: 20px;

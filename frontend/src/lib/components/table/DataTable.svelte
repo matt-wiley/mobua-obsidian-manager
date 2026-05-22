@@ -72,7 +72,10 @@
 
 	const fieldMap = $derived(Object.fromEntries(schema.map((f) => [f.field_name, f])));
 
-	// --- Save handler --------------------------------------------------------
+	// --- Save handler with error feedback -----------------------------------
+
+	let saveError = $state<string | null>(null);
+	let errorTimer: ReturnType<typeof setTimeout> | null = null;
 
 	async function handleSave(record: VaultRecord, colId: string, value: string) {
 		const field = fieldMap[colId];
@@ -83,9 +86,19 @@
 		} else {
 			patch = { sections: { ...record.sections, [colId]: value } };
 		}
-		await recordsStore.update(record.id, patch);
+		try {
+			await recordsStore.update(record.id, patch);
+		} catch (e) {
+			saveError = e instanceof Error ? e.message : 'Save failed';
+			if (errorTimer) clearTimeout(errorTimer);
+			errorTimer = setTimeout(() => { saveError = null; }, 4000);
+		}
 	}
 </script>
+
+{#if saveError}
+	<div class="save-error" role="alert">{saveError}</div>
+{/if}
 
 {#if records.length === 0}
 	<p class="empty">No records in this folder yet.</p>
@@ -176,6 +189,15 @@
 	}
 	.record-link:hover {
 		text-decoration: underline;
+	}
+	.save-error {
+		background: #fee2e2;
+		color: #991b1b;
+		border: 1px solid #fca5a5;
+		border-radius: 6px;
+		padding: 8px 12px;
+		font-size: 0.875rem;
+		margin-bottom: 8px;
 	}
 	.empty {
 		color: #9ca3af;

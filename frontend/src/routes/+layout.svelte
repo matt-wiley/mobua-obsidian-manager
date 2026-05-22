@@ -6,8 +6,23 @@
 	import Drawer from '$lib/components/drawer/Drawer.svelte';
 	import { syncStore } from '$lib/stores/sync.svelte';
 	import { recordsStore } from '$lib/stores/records.svelte';
+	import { apiFetch } from '$lib/api/client';
 
 	let { children } = $props();
+
+	let repairMsg = $state<string | null>(null);
+	let repairTimer: ReturnType<typeof setTimeout> | null = null;
+
+	async function handleRepair() {
+		try {
+			const result = await apiFetch<{ reindexed: number }>('/sync/repair', { method: 'POST' });
+			repairMsg = `Reindexed ${result.reindexed} files`;
+		} catch {
+			repairMsg = 'Repair failed';
+		}
+		if (repairTimer) clearTimeout(repairTimer);
+		repairTimer = setTimeout(() => { repairMsg = null; }, 4000);
+	}
 
 	onMount(() => {
 		const es = new EventSource('/api/events');
@@ -61,6 +76,13 @@
 	<main>
 		{@render children()}
 	</main>
+
+	<footer>
+		{#if repairMsg}
+			<span class="repair-msg">{repairMsg}</span>
+		{/if}
+		<button class="repair-btn" onclick={handleRepair}>Repair index</button>
+	</footer>
 </div>
 
 <Drawer />
@@ -88,5 +110,31 @@
 	main {
 		flex: 1;
 		padding: 20px;
+	}
+	footer {
+		display: flex;
+		align-items: center;
+		justify-content: flex-end;
+		gap: 12px;
+		padding: 8px 20px;
+		border-top: 1px solid #f3f4f6;
+		background: #fff;
+	}
+	.repair-btn {
+		background: none;
+		border: none;
+		cursor: pointer;
+		font-size: 0.75rem;
+		color: #9ca3af;
+		padding: 2px 6px;
+		border-radius: 4px;
+	}
+	.repair-btn:hover {
+		color: #6b7280;
+		background: #f3f4f6;
+	}
+	.repair-msg {
+		font-size: 0.75rem;
+		color: #6b7280;
 	}
 </style>
