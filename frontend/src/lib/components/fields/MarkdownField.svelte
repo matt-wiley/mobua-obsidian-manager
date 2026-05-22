@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { onMount, onDestroy } from 'svelte';
+	import { onDestroy } from 'svelte';
+	import { marked } from 'marked';
 	import { EditorView, keymap } from '@codemirror/view';
 	import { EditorState } from '@codemirror/state';
 	import { markdown } from '@codemirror/lang-markdown';
@@ -95,7 +96,7 @@
 		class:editable={!readonly}
 	>
 		{#if value}
-			<pre class="markdown-body">{value}</pre>
+			<div class="markdown-body">{@html marked.parse(value)}</div>
 		{:else}
 			<span class="empty">Click to edit…</span>
 		{/if}
@@ -121,13 +122,21 @@
 		cursor: text;
 	}
 	.markdown-body {
-		margin: 0;
-		white-space: pre-wrap;
-		word-break: break-word;
-		font-family: inherit;
 		font-size: 14px;
 		line-height: 1.6;
 	}
+	.markdown-body :global(p) { margin: 0 0 0.5em; }
+	.markdown-body :global(p:last-child) { margin-bottom: 0; }
+	.markdown-body :global(h1) { margin: 0.75em 0 0.25em; font-weight: 600; }
+	.markdown-body :global(h2) { margin: 0.75em 0 0.25em; font-weight: 600; }
+	.markdown-body :global(h3) { margin: 0.75em 0 0.25em; font-weight: 600; }
+	.markdown-body :global(h4) { margin: 0.75em 0 0.25em; font-weight: 600; }
+	.markdown-body :global(ul) { margin: 0.25em 0; padding-left: 1.5em; }
+	.markdown-body :global(ol) { margin: 0.25em 0; padding-left: 1.5em; }
+	.markdown-body :global(code) { background: #f3f4f6; padding: 0.1em 0.3em; border-radius: 3px; font-size: 13px; }
+	.markdown-body :global(pre) { background: #f3f4f6; padding: 0.75em; border-radius: 4px; overflow-x: auto; }
+	.markdown-body :global(blockquote) { border-left: 3px solid #d1d5db; margin: 0.5em 0; padding-left: 0.75em; color: #6b7280; }
+	.markdown-body :global(a) { color: #6366f1; text-decoration: underline; }
 	.empty {
 		color: #9ca3af;
 		font-style: italic;

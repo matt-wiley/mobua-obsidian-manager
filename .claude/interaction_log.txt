@@ -32,3 +32,6 @@
 2026-05-22 00:59 | Claude explained that all 10 development phases are complete, but identified four functional gaps (cross-folder wikilinks, EnumField rendering, vault path onboarding, and cross-folder drawer staleness) that are deferred limitations for v1.
 2026-05-22 01:07 | Claude reviewed the project state and confirmed all 10 implementation phases are complete with a FastAPI/SQLite/SvelteKit stack, passing 30 tests, while identifying 4 deferred v1 limitations (cross-folder wikilinks, EnumField rendering, vault path onboarding, and cross-folder drawer staleness).
 2026-05-22 01:09 | Claude implemented auto-save functionality on editor blur/tab events, preserved Shift+Enter submission, and added Escape key to cancel without saving.
+2026-05-22 02:34 | Claude confirmed returning to the project directory `/Users/matt/projects/mobua-obsidian-manager`.
+2026-05-22 02:34 | Claude recapped multiple bug fixes and feature improvements made during the session, including auto-saving in MarkdownField, debounced file operations, markdown rendering, and table UX enhancements like column resizing, reordering, and multi-field sorting.
+2026-05-22 02:36 | User issued a "clear" command, but Claude provided no response.

@@ -27,6 +27,9 @@ from sync.indexer import index_file
 logger = logging.getLogger(__name__)
 
 
+_DELETE_DEBOUNCE_S = 0.5  # seconds to wait before committing a delete
+
+
 class _VaultHandler(FileSystemEventHandler):
     def __init__(
         self,
@@ -38,6 +41,7 @@ class _VaultHandler(FileSystemEventHandler):
         self.vault_path = vault_path
         self.conn = conn
         self.on_change = on_change
+        self._pending_deletes: dict[str, threading.Timer] = {}
 
     # ------------------------------------------------------------------
     # watchdog callbacks
@@ -46,20 +50,41 @@ class _VaultHandler(FileSystemEventHandler):
     def on_created(self, event: FileSystemEvent) -> None:
         if not self._relevant(event):
             return
+        # Cancel any pending delete for this path — handles the atomic
+        # write pattern (tmp → os.replace → .md) which fires deleted+created.
+        self._cancel_pending_delete(event.src_path)
         self._index(Path(event.src_path))
 
     def on_modified(self, event: FileSystemEvent) -> None:
         if not self._relevant(event):
             return
+        self._cancel_pending_delete(event.src_path)
         self._index(Path(event.src_path))
 
     def on_deleted(self, event: FileSystemEvent) -> None:
         if not self._relevant(event):
             return
-        row = queries.get_record_by_file_path(self.conn, event.src_path)
-        queries.delete_record_by_file_path(self.conn, event.src_path)
+        path = event.src_path
+        timer = threading.Timer(_DELETE_DEBOUNCE_S, self._do_delete, args=[path])
+        self._pending_deletes[path] = timer
+        timer.start()
+
+    def _cancel_pending_delete(self, path: str) -> None:
+        timer = self._pending_deletes.pop(path, None)
+        if timer:
+            timer.cancel()
+
+    def _do_delete(self, path: str) -> None:
+        self._pending_deletes.pop(path, None)
+        # If the file exists again the "delete" was part of an atomic write
+        # (e.g. tmp → os.replace → .md).  Re-index instead of deleting.
+        if Path(path).exists():
+            self._index(Path(path))
+            return
+        row = queries.get_record_by_file_path(self.conn, path)
+        queries.delete_record_by_file_path(self.conn, path)
         self.conn.commit()
-        logger.info("deleted record for %s", event.src_path)
+        logger.info("deleted record for %s", path)
         if row and self.on_change:
             self.on_change({
                 "type": "record_deleted",
@@ -75,10 +100,12 @@ class _VaultHandler(FileSystemEventHandler):
             return
 
         if src.suffix == ".md":
+            self._cancel_pending_delete(str(src))
             queries.delete_record_by_file_path(self.conn, str(src))
             self.conn.commit()
 
         if dest.suffix == ".md":
+            self._cancel_pending_delete(str(dest))
             self._index(dest)
 
     # ------------------------------------------------------------------

@@ -20,6 +20,12 @@ export const recordsStore = {
 		}
 	},
 
+	async refresh() {
+		if (!_currentFolder) return;
+		const records = await api.getRecords(_currentFolder);
+		_records = records;
+	},
+
 	async update(id: string, patch: RecordUpdate): Promise<VaultRecord> {
 		const updated = await api.updateRecord(id, patch);
 		_records = _records.map((r) => (r.id === id ? updated : r));
@@ -27,6 +33,6 @@ export const recordsStore = {
 	},
 
 	invalidate() {
-		if (_currentFolder) this.load(_currentFolder);
+		this.refresh();
 	}
 };
