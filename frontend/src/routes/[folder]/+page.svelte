@@ -12,6 +12,7 @@
 	// folder is always defined on this route
 	const folder = get(page).params.folder as string;
 	let colWidths = $state<Record<string, number>>({});
+	let ready = $state(false);
 	let creating = $state(false);
 	let createError = $state<string | null>(null);
 
@@ -21,6 +22,7 @@
 			schemaStore.load(folder),
 			getColWidths(folder).then((w) => { colWidths = w; })
 		]);
+		ready = true;
 	});
 
 	async function handleCreate() {
@@ -63,7 +65,7 @@
 		<p class="create-error">{createError}</p>
 	{/if}
 
-	{#if recordsStore.loading}
+	{#if !ready}
 		<p class="loading">Loading…</p>
 	{:else}
 		<DataTable
