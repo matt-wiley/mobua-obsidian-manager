@@ -60,3 +60,7 @@
 2026-05-22 14:27 | Claude explained that the user's current setup with separate FastAPI and SvelteKit dev servers cannot be packaged as a single Python application without switching to a static SvelteKit adapter, configuring FastAPI to serve static assets, and updating the pyproject.toml with proper build configuration.
 2026-05-22 14:40 | Claude confirmed the completion of a full-stack refactor that switched the frontend to SPA mode with static adapter, restructured the backend as an installable Python package with API routing, and created a Makefile to orchestrate the build process.
 2026-05-22 14:44 | Claude updated the README by consolidating setup sections, clarifying build/run/development workflows, and updating architecture documentation and API paths to reflect the `/api` prefix.
+2026-05-22 14:47 | User thanked Claude, who responded politely with a standard acknowledgment.
+2026-05-22 16:12 | Claude explained that the 404 error stems from the Vite proxy no longer stripping `/api` from requests while the old backend lacks `/api`-prefixed routes, and provided the correct command to restart the backend with the new module path.
+2026-05-22 16:14 | Claude consolidated backend files by removing `main.py`, `config.py`, and `vault.py` from `backend/` and relocating them to `backend/obsidian_manager/`.
+2026-05-22 16:16 | Claude confirmed that the "＋ Add workspace" button is now persistently visible on the home page after loading completes, regardless of whether the user has zero or multiple vaults.

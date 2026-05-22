@@ -26,7 +26,7 @@
 	{:else if error}
 		<p class="state error">{error}</p>
 	{:else if vaults.length === 0}
-		<p class="state">No workspaces configured. <a href="/setup">Add one</a>.</p>
+		<p class="state">No workspaces configured yet.</p>
 	{:else}
 		<div class="vault-grid">
 			{#each vaults as vault (vault.id)}
@@ -36,6 +36,9 @@
 				</a>
 			{/each}
 		</div>
+	{/if}
+	{#if !loading}
+		<a class="add-link" href="/setup">＋ Add workspace</a>
 	{/if}
 </div>
 
@@ -83,6 +86,16 @@
 	}
 	.state {
 		color: #9ca3af;
+	}
+	.add-link {
+		display: inline-block;
+		margin-top: 16px;
+		font-size: 0.875rem;
+		color: #6366f1;
+		text-decoration: none;
+	}
+	.add-link:hover {
+		text-decoration: underline;
 	}
 	.state a {
 		color: #6366f1;
