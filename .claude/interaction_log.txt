@@ -20,3 +20,6 @@
 2026-05-22 00:09 | Claude confirmed there are no frontend tests configured and offered to set up Vitest + @testing-library/svelte to write component tests for the field components' interactive behaviors.
 2026-05-22 00:22 | Claude completed a task and requested the user's next instruction.
 2026-05-22 00:23 | Claude completed Phase 5 by building six editable field components (TextField, DateField, UrlField, EnumField, RelationField, MarkdownField), two shared UI components (WikiLink, SyncBadge), and began test infrastructure setup.
+2026-05-22 00:24 | Claude outlined the remaining 5 phases (6-10) of a Svelte app build, identifying Phase 6 (table view with DataTable component) as the immediate next priority to achieve end-to-end usability.
+2026-05-22 00:31 | Claude completed Phase 6 of development by implementing a full column-width persistence system with backend endpoints, frontend API functions, and a TanStack Table component with drag-to-resize functionality and debounced saving.
+2026-05-22 00:34 | Claude replaced the incompatible `@tanstack/svelte-table` v8 with a custom Svelte 5 table implementation using `$state` and a debounced resize handler to save column widths.

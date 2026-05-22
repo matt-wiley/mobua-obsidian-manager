@@ -19,3 +19,14 @@ export function getFolders(): Promise<Folder[]> {
 export function getFolderSchema(folder: string): Promise<SchemaField[]> {
 	return apiFetch(`/folders/${encodeURIComponent(folder)}/schema`);
 }
+
+export function getColWidths(folder: string): Promise<Record<string, number>> {
+	return apiFetch(`/folders/${encodeURIComponent(folder)}/col_widths`);
+}
+
+export function setColWidth(folder: string, field: string, width: number): Promise<void> {
+	return apiFetch(
+		`/folders/${encodeURIComponent(folder)}/col_widths/${encodeURIComponent(field)}`,
+		{ method: 'PUT', body: JSON.stringify({ width }) }
+	);
+}

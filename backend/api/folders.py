@@ -1,13 +1,16 @@
 """Folder and schema endpoints.
 
-GET /folders                    → list of folders with record counts
-GET /folders/{folder}/schema    → union of all field names + inferred types
+GET /folders                            → list of folders with record counts
+GET /folders/{folder}/schema            → union of all field names + inferred types
+GET /folders/{folder}/col_widths        → saved column widths for the folder
+PUT /folders/{folder}/col_widths/{field}→ save a column width
 """
 
 import json
 import logging
 
 from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel
 
 from api._helpers import folder_db_path
 from db import queries
@@ -60,6 +63,25 @@ def folder_schema(folder: str):
         })
 
     return schema
+
+
+class ColWidthBody(BaseModel):
+    width: int
+
+
+@router.get("/folders/{folder}/col_widths")
+def get_col_widths(folder: str):
+    conn = get_connection()
+    fp = folder_db_path(folder)
+    rows = queries.get_col_widths(conn, fp)
+    return {row["field_name"]: row["width"] for row in rows}
+
+
+@router.put("/folders/{folder}/col_widths/{field}", status_code=204)
+def set_col_width(folder: str, field: str, body: ColWidthBody):
+    conn = get_connection()
+    fp = folder_db_path(folder)
+    queries.upsert_col_width(conn, fp, field, body.width)
 
 
 def _sample_value(records, column: str, key: str):
