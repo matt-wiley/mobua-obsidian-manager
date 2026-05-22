@@ -19,31 +19,54 @@ A "Notion Lite" web UI backed by an Obsidian vault. Markdown files are the only 
 | Frontend | SvelteKit · TypeScript |
 | Markdown editor | CodeMirror 6 |
 
-## Setup
-
-### Prerequisites
+## Prerequisites
 
 - Python 3.12+, [`uv`](https://github.com/astral-sh/uv)
 - Node.js 18+
 
-### Configuration
+## Building
 
-Create a `.env` file in the project root (or `backend/`):
+Build a self-contained wheel with the UI baked in:
+
+```bash
+make build
+```
+
+This runs `npm run build` in the frontend, copies the output into the Python package, then runs `uv build`. The resulting wheel is in `backend/dist/`.
+
+## Running the built package
+
+Install and run:
+
+```bash
+uv tool install backend/dist/obsidian_manager-*.whl
+obsidian-manager
+```
+
+Or run directly without installing:
+
+```bash
+uv run --with backend/dist/obsidian_manager-*.whl obsidian-manager
+```
+
+Configure via environment variables or a `.env` file in the working directory:
 
 ```env
 VAULT_PATH=/path/to/your/obsidian/vault
-DB_PATH=/path/to/obsidian.db
+DATA_DIR=~/.obsidian-manager
 PORT=8000
 ```
 
-### Running
+Open [http://localhost:8000](http://localhost:8000).
 
-Start both processes simultaneously:
+## Development
+
+Run the backend and frontend separately for hot reload:
 
 ```bash
 # Terminal 1 — backend
 cd backend
-uv run uvicorn main:app --reload
+uv run uvicorn obsidian_manager.main:app --reload
 
 # Terminal 2 — frontend
 cd frontend
@@ -51,9 +74,7 @@ npm install
 npm run dev
 ```
 
-Open [http://localhost:5173](http://localhost:5173).
-
-## Development
+Open [http://localhost:5173](http://localhost:5173). The frontend proxies `/api` to the backend.
 
 **Backend tests:**
 ```bash
@@ -67,19 +88,13 @@ cd frontend
 npm test
 ```
 
-**Frontend production build:**
-```bash
-cd frontend
-npm run build && npm run preview
-```
-
 ## Architecture
 
 ```
-SvelteKit (5173)
+SvelteKit (served by FastAPI in production, :5173 in dev)
     │  GET /api/...
     ▼
-FastAPI (8000)
+FastAPI (:8000)
     │  queries
     ▼
 SQLite (index)
@@ -90,7 +105,7 @@ watchdog ──── .md files (vault, source of truth)
 
 **Read path:** SvelteKit → FastAPI queries SQLite → response
 
-**Write path:** SvelteKit → `PUT /records/{id}` → FastAPI → `writer.py` writes `.md` atomically → `watcher.py` detects change → `parser.py` + `indexer.py` update SQLite → SSE event → Svelte store → UI re-renders
+**Write path:** SvelteKit → `PUT /api/vaults/{id}/records/{id}` → FastAPI → `writer.py` writes `.md` atomically → `watcher.py` detects change → `parser.py` + `indexer.py` update SQLite → SSE event → Svelte store → UI re-renders
 
 ### Key backend modules
 
@@ -101,7 +116,7 @@ watchdog ──── .md files (vault, source of truth)
 | `sync/indexer.py` | Parser output → SQLite upsert; stable UUIDs from file paths |
 | `sync/writer.py` | SQLite record → `.md` (atomic write via `.tmp` + `os.replace`) |
 | `sync/watcher.py` | `watchdog` observer; skips `.obsidian/` and non-`.md` files |
-| `api/events.py` | SSE endpoint at `GET /events` |
+| `api/events.py` | SSE endpoint at `GET /api/events` |
 
 ### Key frontend modules
 

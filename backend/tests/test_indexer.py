@@ -4,8 +4,8 @@ import json
 import pytest
 from pathlib import Path
 
-from db.connection import init_db
-from sync.indexer import index_file, reindex_all
+from obsidian_manager.db.connection import init_db
+from obsidian_manager.sync.indexer import index_file, reindex_all
 
 
 VAULT = Path(__file__).parent.parent.parent / ".local" / "test-vault"

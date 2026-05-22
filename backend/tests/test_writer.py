@@ -4,7 +4,7 @@ import pytest
 import yaml
 from pathlib import Path
 
-from sync.writer import write_record
+from obsidian_manager.sync.writer import write_record
 
 
 class TestWriteRecord:

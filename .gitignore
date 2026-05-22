@@ -18,3 +18,8 @@ frontend/build/
 
 # OS
 .DS_Store
+
+# Built assets (baked into wheel at build time)
+backend/obsidian_manager/static/*
+!backend/obsidian_manager/static/.gitkeep
+backend/dist/

@@ -1,18 +1,38 @@
 [project]
-name = "backend"
+name = "obsidian-manager"
 version = "0.1.0"
-description = "Add your description here"
+description = "Notion-lite web UI backed by an Obsidian vault"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "fastapi>=0.136.1",
     "python-dotenv>=1.2.2",
     "python-frontmatter>=1.3.0",
+    "pyyaml>=6.0",
     "uvicorn[standard]>=0.47.0",
     "watchdog>=6.0.0",
 ]
 
+[project.scripts]
+obsidian-manager = "obsidian_manager.__main__:main"
+
 [dependency-groups]
 dev = [
     "pytest>=9.0.3",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["obsidian_manager"]
+
+[tool.hatch.build.targets.wheel.shared-data]
+
+[tool.hatch.build]
+include = [
+    "obsidian_manager/**/*.py",
+    "obsidian_manager/**/*.sql",
+    "obsidian_manager/static/**",
 ]

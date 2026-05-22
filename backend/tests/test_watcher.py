@@ -5,8 +5,8 @@ import time
 import pytest
 from pathlib import Path
 
-from db.connection import init_db
-from sync.watcher import start_watcher
+from obsidian_manager.db.connection import init_db
+from obsidian_manager.sync.watcher import start_watcher
 
 
 @pytest.fixture

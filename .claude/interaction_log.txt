@@ -57,3 +57,6 @@
 2026-05-22 14:21 | Claude explained that the only necessary change is having `vault.py` and `api/config.py` derive paths from `DATA_DIR`, which automatically creates `~/.obsidian-manager/` on startup to store per-vault databases and `vaults.json`, with override capability via environment variable.
 2026-05-22 14:24 | Claude reverted the record route page to an untracked state as requested by the user.
 2026-05-22 14:24 | Claude reverted all staged changes back to unstaged status, including deletions and untracked files.
+2026-05-22 14:27 | Claude explained that the user's current setup with separate FastAPI and SvelteKit dev servers cannot be packaged as a single Python application without switching to a static SvelteKit adapter, configuring FastAPI to serve static assets, and updating the pyproject.toml with proper build configuration.
+2026-05-22 14:40 | Claude confirmed the completion of a full-stack refactor that switched the frontend to SPA mode with static adapter, restructured the backend as an installable Python package with API routing, and created a Makefile to orchestrate the build process.
+2026-05-22 14:44 | Claude updated the README by consolidating setup sections, clarifying build/run/development workflows, and updating architecture documentation and API paths to reflect the `/api` prefix.

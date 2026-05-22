@@ -3,7 +3,7 @@
 import pytest
 from pathlib import Path
 
-from sync.parser import parse_file, infer_type
+from obsidian_manager.sync.parser import parse_file, infer_type
 
 
 VAULT = Path(__file__).parent.parent.parent / ".local" / "test-vault"
