@@ -111,7 +111,7 @@
 						{#each allCols as col (col.id)}
 							<td style="width: {colW(col.id, col.defaultW)}px">
 								{#if col.isFilename}
-									<a href="/{folder}/{record.filename}" class="record-link">
+									<a href="/{folder}/{encodeURIComponent(record.filename)}" class="record-link">
 										{record.filename}
 									</a>
 								{:else}
