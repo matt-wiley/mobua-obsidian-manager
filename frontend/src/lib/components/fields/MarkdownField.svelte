@@ -59,10 +59,18 @@
 			parent: editorEl
 		});
 
+		// Save on blur (focus leaving the editor wrapper entirely)
+		const handleBlur = (e: FocusEvent) => {
+			if (editorEl && e.relatedTarget instanceof Node && editorEl.contains(e.relatedTarget)) return;
+			commit();
+		};
+		editorEl.addEventListener('focusout', handleBlur);
+
 		// Focus the editor
 		view.focus();
 
 		return () => {
+			editorEl?.removeEventListener('focusout', handleBlur);
 			view?.destroy();
 			view = null;
 		};
@@ -74,7 +82,7 @@
 {#if editing}
 	<div class="editor-wrap">
 		<div bind:this={editorEl}></div>
-		<div class="editor-hint">Shift+Enter to save · Esc to cancel</div>
+		<div class="editor-hint">Click away to save · Esc to cancel</div>
 	</div>
 {:else}
 	<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
