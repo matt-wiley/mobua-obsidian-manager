@@ -29,6 +29,12 @@ export const drawerStore = {
 		}
 	},
 
+	goToBreadcrumb(index: number) {
+		if (index < 0 || index >= _breadcrumbs.length) return;
+		_record = _breadcrumbs[index];
+		_breadcrumbs = _breadcrumbs.slice(0, index);
+	},
+
 	close() {
 		_open = false;
 		_record = null;

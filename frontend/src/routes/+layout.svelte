@@ -3,6 +3,7 @@
 	import { page } from '$app/stores';
 	import favicon from '$lib/assets/favicon.svg';
 	import SyncBadge from '$lib/components/shared/SyncBadge.svelte';
+	import Drawer from '$lib/components/drawer/Drawer.svelte';
 	import { syncStore } from '$lib/stores/sync.svelte';
 	import { recordsStore } from '$lib/stores/records.svelte';
 
@@ -61,6 +62,8 @@
 		{@render children()}
 	</main>
 </div>
+
+<Drawer />
 
 <style>
 	.app-shell {

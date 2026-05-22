@@ -2,6 +2,7 @@
 	import { goto } from '$app/navigation';
 	import type { VaultRecord } from '$lib/api/records';
 	import { drawerStore } from '$lib/stores/drawer.svelte';
+	import { recordsStore } from '$lib/stores/records.svelte';
 
 	let {
 		label,
@@ -11,23 +12,28 @@
 		record?: VaultRecord;
 	} = $props();
 
+	// Resolve the record from the store if not explicitly provided
+	const resolvedRecord = $derived(
+		record ?? recordsStore.records.find((r) => r.filename === label)
+	);
+
 	function handleClick(e: MouseEvent) {
 		e.preventDefault();
 		e.stopPropagation();
 
-		if (!record) return;
+		if (!resolvedRecord) return;
 
 		const isModified = e.metaKey || e.ctrlKey;
 		if (isModified) {
-			const folder = record.folder_path.replace(/\/$/, '');
-			goto(`/${encodeURIComponent(folder)}/${encodeURIComponent(record.filename)}`);
+			const folder = resolvedRecord.folder_path.replace(/\/$/, '');
+			goto(`/${encodeURIComponent(folder)}/${encodeURIComponent(resolvedRecord.filename)}`);
 			return;
 		}
 
 		if (drawerStore.open) {
-			drawerStore.replace(record);
+			drawerStore.replace(resolvedRecord);
 		} else {
-			drawerStore.push(record);
+			drawerStore.push(resolvedRecord);
 		}
 	}
 </script>
@@ -36,10 +42,10 @@
 	role="link"
 	tabindex="0"
 	class="wikilink"
-	class:resolved={!!record}
+	class:resolved={!!resolvedRecord}
 	onclick={handleClick}
 	onkeydown={(e) => e.key === 'Enter' && handleClick(e as unknown as MouseEvent)}
-	title={record ? `${record.folder_path}${record.filename}` : label}
+	title={resolvedRecord ? `${resolvedRecord.folder_path}${resolvedRecord.filename}` : label}
 >
 	{label}
 </span>
