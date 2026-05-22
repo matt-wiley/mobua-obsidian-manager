@@ -29,32 +29,32 @@ export interface RelationOption {
 	folder_path: string | null;
 }
 
-export function getRecords(folder: string): Promise<VaultRecord[]> {
-	return apiFetch(`/folders/${encodeURIComponent(folder)}/records`);
+export function getRecords(vaultId: string, folder: string): Promise<VaultRecord[]> {
+	return apiFetch(`/vaults/${encodeURIComponent(vaultId)}/folders/${encodeURIComponent(folder)}/records`);
 }
 
-export function getRecord(id: string): Promise<VaultRecord> {
-	return apiFetch(`/records/${id}`);
+export function getRecord(vaultId: string, id: string): Promise<VaultRecord> {
+	return apiFetch(`/vaults/${encodeURIComponent(vaultId)}/records/${id}`);
 }
 
-export function createRecord(folder: string, data: RecordCreate): Promise<VaultRecord> {
-	return apiFetch(`/folders/${encodeURIComponent(folder)}/records`, {
+export function createRecord(vaultId: string, folder: string, data: RecordCreate): Promise<VaultRecord> {
+	return apiFetch(`/vaults/${encodeURIComponent(vaultId)}/folders/${encodeURIComponent(folder)}/records`, {
 		method: 'POST',
 		body: JSON.stringify(data)
 	});
 }
 
-export function updateRecord(id: string, data: RecordUpdate): Promise<VaultRecord> {
-	return apiFetch(`/records/${id}`, {
+export function updateRecord(vaultId: string, id: string, data: RecordUpdate): Promise<VaultRecord> {
+	return apiFetch(`/vaults/${encodeURIComponent(vaultId)}/records/${id}`, {
 		method: 'PUT',
 		body: JSON.stringify(data)
 	});
 }
 
-export function deleteRecord(id: string): Promise<void> {
-	return apiFetch(`/records/${id}`, { method: 'DELETE' });
+export function deleteRecord(vaultId: string, id: string): Promise<void> {
+	return apiFetch(`/vaults/${encodeURIComponent(vaultId)}/records/${id}`, { method: 'DELETE' });
 }
 
-export function getRelations(id: string, field: string): Promise<RelationOption[]> {
-	return apiFetch(`/records/${id}/relations/${encodeURIComponent(field)}`);
+export function getRelations(vaultId: string, id: string, field: string): Promise<RelationOption[]> {
+	return apiFetch(`/vaults/${encodeURIComponent(vaultId)}/records/${id}/relations/${encodeURIComponent(field)}`);
 }

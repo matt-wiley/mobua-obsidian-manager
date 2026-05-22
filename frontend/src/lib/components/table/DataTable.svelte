@@ -9,11 +9,13 @@
 	let {
 		records,
 		schema,
+		vault,
 		folder,
 		colWidths = {}
 	}: {
 		records: VaultRecord[];
 		schema: SchemaField[];
+		vault: string;
 		folder: string;
 		colWidths?: Record<string, number>;
 	} = $props();
@@ -31,7 +33,7 @@
 		if (saveTimer) clearTimeout(saveTimer);
 		saveTimer = setTimeout(() => {
 			for (const [field, width] of Object.entries(sizing)) {
-				setColWidth(folder, field, width);
+				setColWidth(vault, folder, field, width);
 			}
 		}, 500);
 	}
@@ -366,7 +368,7 @@
 							<td style="width: {colW(col.id, col.defaultW)}px">
 								{#if col.isFilename}
 									<div class="cell-inner">
-										<a href="/{folder}/{encodeURIComponent(record.filename)}" class="record-link">
+										<a href="/{encodeURIComponent(vault)}/{encodeURIComponent(folder)}/{encodeURIComponent(record.filename)}" class="record-link">
 											{record.filename}
 										</a>
 									</div>

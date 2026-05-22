@@ -12,6 +12,9 @@ vi.mock('$app/navigation', () => ({ goto: vi.fn() }));
 vi.mock('$lib/stores/drawer.svelte', () => ({
 	drawerStore: { open: false, push: vi.fn(), replace: vi.fn() }
 }));
+vi.mock('$lib/stores/records.svelte', () => ({
+	recordsStore: { currentVaultId: 'test-vault', records: [] }
+}));
 
 const RELATIONS = [
 	{ id: 'a', filename: 'Q3 Rebrand', folder_path: 'Projects/' },
@@ -42,7 +45,7 @@ describe('RelationField', () => {
 		});
 		await userEvent.click(document.querySelector('.field-view') as HTMLElement);
 		await screen.findByRole('combobox');
-		expect(recordsApi.getRelations).toHaveBeenCalledWith('rec1', 'project');
+		expect(recordsApi.getRelations).toHaveBeenCalledWith('test-vault', 'rec1', 'project');
 		expect(screen.getByRole('option', { name: 'Q3 Rebrand' })).toBeInTheDocument();
 		expect(screen.getByRole('option', { name: 'Platform Migration' })).toBeInTheDocument();
 	});

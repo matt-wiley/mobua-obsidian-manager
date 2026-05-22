@@ -9,7 +9,7 @@
 	import { createRecord } from '$lib/api/records';
 	import DataTable from '$lib/components/table/DataTable.svelte';
 
-	// folder is always defined on this route
+	const vault = get(page).params.vault as string;
 	const folder = get(page).params.folder as string;
 	let colWidths = $state<Record<string, number>>({});
 	let ready = $state(false);
@@ -18,9 +18,9 @@
 
 	onMount(async () => {
 		await Promise.all([
-			recordsStore.load(folder),
-			schemaStore.load(folder),
-			getColWidths(folder).then((w) => { colWidths = w; })
+			recordsStore.load(vault, folder),
+			schemaStore.load(vault, folder),
+			getColWidths(vault, folder).then((w) => { colWidths = w; })
 		]);
 		ready = true;
 	});
@@ -29,13 +29,12 @@
 		creating = true;
 		createError = null;
 		try {
-			// Try "Untitled", then "Untitled 2", etc.
 			let name = 'Untitled';
 			let n = 2;
 			while (n <= 20) {
 				try {
-					const record = await createRecord(folder, { filename: name });
-					await goto(`/${encodeURIComponent(folder)}/${encodeURIComponent(record.filename)}`);
+					const record = await createRecord(vault, folder, { filename: name });
+					await goto(`/${encodeURIComponent(vault)}/${encodeURIComponent(folder)}/${encodeURIComponent(record.filename)}`);
 					return;
 				} catch (e) {
 					if (e instanceof Error && e.message.includes('already exists')) {
@@ -71,6 +70,7 @@
 		<DataTable
 			records={recordsStore.records}
 			schema={schemaStore.schema}
+			{vault}
 			{folder}
 			{colWidths}
 		/>

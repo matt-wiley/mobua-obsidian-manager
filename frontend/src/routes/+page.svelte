@@ -1,16 +1,17 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { getFolders, type Folder } from '$lib/api/folders';
+	import { getConfig, type VaultInfo } from '$lib/api/config';
 
-	let folders = $state<Folder[]>([]);
+	let vaults = $state<VaultInfo[]>([]);
 	let loading = $state(true);
 	let error = $state<string | null>(null);
 
 	onMount(async () => {
 		try {
-			folders = await getFolders();
+			const config = await getConfig();
+			vaults = config.vaults;
 		} catch (e) {
-			error = e instanceof Error ? e.message : 'Failed to load folders';
+			error = e instanceof Error ? e.message : 'Failed to load workspaces';
 		} finally {
 			loading = false;
 		}
@@ -18,20 +19,20 @@
 </script>
 
 <div class="home">
-	<h2 class="page-title">Vault</h2>
+	<h2 class="page-title">Workspaces</h2>
 
 	{#if loading}
 		<p class="state">Loading…</p>
 	{:else if error}
 		<p class="state error">{error}</p>
-	{:else if folders.length === 0}
-		<p class="state">No folders found. Add some <code>.md</code> files to your vault.</p>
+	{:else if vaults.length === 0}
+		<p class="state">No workspaces configured. <a href="/setup">Add one</a>.</p>
 	{:else}
-		<div class="folder-grid">
-			{#each folders as folder (folder.path)}
-				<a class="folder-card" href="/{encodeURIComponent(folder.name)}">
-					<span class="folder-name">{folder.name}</span>
-					<span class="record-count">{folder.record_count} record{folder.record_count === 1 ? '' : 's'}</span>
+		<div class="vault-grid">
+			{#each vaults as vault (vault.id)}
+				<a class="vault-card" href="/{encodeURIComponent(vault.id)}">
+					<span class="vault-name">{vault.name}</span>
+					<span class="vault-path">{vault.path}</span>
 				</a>
 			{/each}
 		</div>
@@ -48,12 +49,12 @@
 		font-weight: 700;
 		color: #111;
 	}
-	.folder-grid {
+	.vault-grid {
 		display: grid;
 		grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
 		gap: 12px;
 	}
-	.folder-card {
+	.vault-card {
 		display: flex;
 		flex-direction: column;
 		gap: 6px;
@@ -64,21 +65,27 @@
 		text-decoration: none;
 		transition: border-color 0.15s, box-shadow 0.15s;
 	}
-	.folder-card:hover {
+	.vault-card:hover {
 		border-color: #6366f1;
 		box-shadow: 0 2px 8px rgba(99, 102, 241, 0.1);
 	}
-	.folder-name {
+	.vault-name {
 		font-size: 1rem;
 		font-weight: 600;
 		color: #111;
 	}
-	.record-count {
+	.vault-path {
 		font-size: 0.8rem;
 		color: #9ca3af;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
 	}
 	.state {
 		color: #9ca3af;
+	}
+	.state a {
+		color: #6366f1;
 	}
 	.state.error {
 		color: #ef4444;

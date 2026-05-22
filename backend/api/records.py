@@ -13,12 +13,12 @@ import logging
 import os
 from pathlib import Path
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
+import vault
 from api import events
-from api._helpers import folder_db_path, row_to_dict
-from config import VAULT_PATH
+from api._helpers import folder_db_path, require_vault, row_to_dict
 from db import queries
 from db.connection import get_connection
 from sync.indexer import index_file
@@ -44,16 +44,16 @@ class RecordUpdate(BaseModel):
 # List / get
 # ---------------------------------------------------------------------------
 
-@router.get("/folders/{folder}/records")
-def list_records(folder: str):
-    conn = get_connection()
+@router.get("/folders/{folder}/records", dependencies=[Depends(require_vault)])
+def list_records(vault_id: str, folder: str):
+    conn = get_connection(vault_id)
     rows = queries.get_records_by_folder(conn, folder_db_path(folder))
     return [row_to_dict(r) for r in rows]
 
 
-@router.get("/records/{record_id}")
-def get_record(record_id: str):
-    conn = get_connection()
+@router.get("/records/{record_id}", dependencies=[Depends(require_vault)])
+def get_record(vault_id: str, record_id: str):
+    conn = get_connection(vault_id)
     row = queries.get_record_by_id(conn, record_id)
     if row is None:
         raise HTTPException(status_code=404, detail="Record not found")
@@ -64,11 +64,12 @@ def get_record(record_id: str):
 # Create
 # ---------------------------------------------------------------------------
 
-@router.post("/folders/{folder}/records", status_code=201)
-def create_record(folder: str, body: RecordCreate):
-    conn = get_connection()
+@router.post("/folders/{folder}/records", status_code=201, dependencies=[Depends(require_vault)])
+def create_record(vault_id: str, folder: str, body: RecordCreate):
+    conn = get_connection(vault_id)
+    vault_path = vault.get_vault_path(vault_id)
     fp = folder_db_path(folder)
-    file_path = VAULT_PATH / fp / f"{body.filename}.md"
+    file_path = vault_path / fp / f"{body.filename}.md"
 
     if file_path.exists():
         raise HTTPException(status_code=409, detail=f"'{body.filename}.md' already exists")
@@ -80,10 +81,10 @@ def create_record(folder: str, body: RecordCreate):
         frontmatter=body.frontmatter,
         sections=body.sections,
     )
-    record_id = index_file(file_path, VAULT_PATH, conn)
+    record_id = index_file(file_path, vault_path, conn)
     row = queries.get_record_by_id(conn, record_id)
 
-    events.broadcast({"type": "record_changed", "folder_path": fp, "record_id": record_id})
+    events.broadcast({"type": "record_changed", "folder_path": fp, "record_id": record_id, "vault_id": vault_id})
     logger.info("created record %s in %s", body.filename, fp)
     return row_to_dict(row)
 
@@ -92,9 +93,10 @@ def create_record(folder: str, body: RecordCreate):
 # Update
 # ---------------------------------------------------------------------------
 
-@router.put("/records/{record_id}")
-def update_record(record_id: str, body: RecordUpdate):
-    conn = get_connection()
+@router.put("/records/{record_id}", dependencies=[Depends(require_vault)])
+def update_record(vault_id: str, record_id: str, body: RecordUpdate):
+    conn = get_connection(vault_id)
+    vault_path = vault.get_vault_path(vault_id)
     row = queries.get_record_by_id(conn, record_id)
     if row is None:
         raise HTTPException(status_code=404, detail="Record not found")
@@ -114,19 +116,19 @@ def update_record(record_id: str, body: RecordUpdate):
         sections=new_sections,
     )
 
-    # If renamed, remove the old file and its DB row so the indexer creates a fresh one
     if old_path != new_path:
         os.remove(old_path)
         queries.delete_record(conn, record_id)
         conn.commit()
 
-    updated_id = index_file(new_path, VAULT_PATH, conn)
+    updated_id = index_file(new_path, vault_path, conn)
     updated_row = queries.get_record_by_id(conn, updated_id)
 
     events.broadcast({
         "type": "record_changed",
         "folder_path": current["folder_path"],
         "record_id": updated_id,
+        "vault_id": vault_id,
     })
     return row_to_dict(updated_row)
 
@@ -135,9 +137,9 @@ def update_record(record_id: str, body: RecordUpdate):
 # Delete
 # ---------------------------------------------------------------------------
 
-@router.delete("/records/{record_id}", status_code=204)
-def delete_record(record_id: str):
-    conn = get_connection()
+@router.delete("/records/{record_id}", status_code=204, dependencies=[Depends(require_vault)])
+def delete_record(vault_id: str, record_id: str):
+    conn = get_connection(vault_id)
     row = queries.get_record_by_id(conn, record_id)
     if row is None:
         raise HTTPException(status_code=404, detail="Record not found")
@@ -151,7 +153,7 @@ def delete_record(record_id: str):
     queries.delete_record(conn, record_id)
     conn.commit()
 
-    events.broadcast({"type": "record_deleted", "folder_path": folder_path, "record_id": record_id})
+    events.broadcast({"type": "record_deleted", "folder_path": folder_path, "record_id": record_id, "vault_id": vault_id})
     logger.info("deleted record %s", record_id)
 
 
@@ -159,14 +161,10 @@ def delete_record(record_id: str):
 # Relations
 # ---------------------------------------------------------------------------
 
-@router.get("/records/{record_id}/relations/{field}")
-def get_relations(record_id: str, field: str):
-    """Return dropdown options for a relation field.
-
-    Looks for a folder whose name matches the field (e.g. project → Projects/).
-    Falls back to distinct values of that field within the current folder.
-    """
-    conn = get_connection()
+@router.get("/records/{record_id}/relations/{field}", dependencies=[Depends(require_vault)])
+def get_relations(vault_id: str, record_id: str, field: str):
+    """Return dropdown options for a relation field."""
+    conn = get_connection(vault_id)
     row = queries.get_record_by_id(conn, record_id)
     if row is None:
         raise HTTPException(status_code=404, detail="Record not found")
@@ -186,7 +184,6 @@ def get_relations(record_id: str, field: str):
                 for r in records
             ]
 
-    # Fall back to distinct values of the field within the current folder
     folder_records = queries.get_records_by_folder(conn, row["folder_path"])
     seen: dict[str, None] = {}
     for r in folder_records:

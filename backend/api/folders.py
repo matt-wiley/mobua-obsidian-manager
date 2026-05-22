@@ -9,10 +9,10 @@ PUT /folders/{folder}/col_widths/{field}→ save a column width
 import json
 import logging
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
-from api._helpers import folder_db_path
+from api._helpers import folder_db_path, require_vault
 from db import queries
 from db.connection import get_connection
 from sync.parser import infer_type
@@ -21,9 +21,9 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
-@router.get("/folders")
-def list_folders():
-    conn = get_connection()
+@router.get("/folders", dependencies=[Depends(require_vault)])
+def list_folders(vault_id: str):
+    conn = get_connection(vault_id)
     rows = queries.get_all_folders(conn)
     return [
         {
@@ -35,9 +35,9 @@ def list_folders():
     ]
 
 
-@router.get("/folders/{folder}/schema")
-def folder_schema(folder: str):
-    conn = get_connection()
+@router.get("/folders/{folder}/schema", dependencies=[Depends(require_vault)])
+def folder_schema(vault_id: str, folder: str):
+    conn = get_connection(vault_id)
     fp = folder_db_path(folder)
 
     records = queries.get_records_by_folder(conn, fp)
@@ -69,17 +69,17 @@ class ColWidthBody(BaseModel):
     width: int
 
 
-@router.get("/folders/{folder}/col_widths")
-def get_col_widths(folder: str):
-    conn = get_connection()
+@router.get("/folders/{folder}/col_widths", dependencies=[Depends(require_vault)])
+def get_col_widths(vault_id: str, folder: str):
+    conn = get_connection(vault_id)
     fp = folder_db_path(folder)
     rows = queries.get_col_widths(conn, fp)
     return {row["field_name"]: row["width"] for row in rows}
 
 
-@router.put("/folders/{folder}/col_widths/{field}", status_code=204)
-def set_col_width(folder: str, field: str, body: ColWidthBody):
-    conn = get_connection()
+@router.put("/folders/{folder}/col_widths/{field}", status_code=204, dependencies=[Depends(require_vault)])
+def set_col_width(vault_id: str, folder: str, field: str, body: ColWidthBody):
+    conn = get_connection(vault_id)
     fp = folder_db_path(folder)
     queries.upsert_col_width(conn, fp, field, body.width)
 

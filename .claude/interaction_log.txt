@@ -51,3 +51,9 @@
 2026-05-22 03:27 | Claude explained that the `DataTable` component now waits for all three data fetches (`records`, `schema`, and `col_widths`) to complete before mounting, ensuring `sizing` initializes correctly with backend-persisted column widths.
 2026-05-22 03:31 | Claude reported that all 10 development phases are complete with a FastAPI + SQLite + SvelteKit stack, reviewed recently shipped features including table improvements and markdown highlighting, and identified 4 deferred v1 limitations while asking the user what to tackle next.
 2026-05-22 03:32 | Claude created a comprehensive `README.md` file documenting the project's functionality, setup instructions, architecture, modules, and technical specifications.
+2026-05-22 13:37 | Claude summarized the implementation of a vault configuration system across backend and frontend, including new API endpoints for setting the vault path, a setup page for initial configuration, and automatic routing to enforce setup completion.
+2026-05-22 14:00 | Claude assessed that multi-vault support is feasible and outlined a 4-part backend refactoring plan replacing singletons with registries in `db/connection.py`, `vault.py`, and the API layer.
+2026-05-22 14:17 | Claude implemented a multi-vault architecture across backend and frontend by refactoring database connections, API routes, and store functions to accept and route requests through vault IDs.
+2026-05-22 14:21 | Claude explained that the only necessary change is having `vault.py` and `api/config.py` derive paths from `DATA_DIR`, which automatically creates `~/.obsidian-manager/` on startup to store per-vault databases and `vaults.json`, with override capability via environment variable.
+2026-05-22 14:24 | Claude reverted the record route page to an untracked state as requested by the user.
+2026-05-22 14:24 | Claude reverted all staged changes back to unstaged status, including deletions and untracked files.

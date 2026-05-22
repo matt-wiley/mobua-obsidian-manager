@@ -2,6 +2,7 @@
 	import WikiLink from '$lib/components/shared/WikiLink.svelte';
 	import type { RelationOption, VaultRecord } from '$lib/api/records';
 	import { getRelations } from '$lib/api/records';
+	import { recordsStore } from '$lib/stores/records.svelte';
 
 	let {
 		value,
@@ -31,7 +32,7 @@
 		editing = true;
 		loading = true;
 		try {
-			options = await getRelations(recordId, fieldName);
+			options = await getRelations(recordsStore.currentVaultId!, recordId, fieldName);
 		} finally {
 			loading = false;
 		}

@@ -16,7 +16,7 @@
 		const folder = record.folder_path.replace(/\/$/, '');
 		if (folder === loadedFolder) return;
 		loadedFolder = folder;
-		getFolderSchema(folder).then((s) => { drawerSchema = s; });
+		getFolderSchema(recordsStore.currentVaultId!, folder).then((s) => { drawerSchema = s; });
 	});
 
 	// Use the live record from recordsStore when available (same folder),

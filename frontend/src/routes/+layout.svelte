@@ -7,15 +7,21 @@
 	import { syncStore } from '$lib/stores/sync.svelte';
 	import { recordsStore } from '$lib/stores/records.svelte';
 	import { apiFetch } from '$lib/api/client';
+	import { getConfig, type VaultInfo } from '$lib/api/config';
+	import { goto } from '$app/navigation';
 
 	let { children } = $props();
 
 	let repairMsg = $state<string | null>(null);
 	let repairTimer: ReturnType<typeof setTimeout> | null = null;
+	let vaults = $state<VaultInfo[]>([]);
+	let switcherOpen = $state(false);
 
 	async function handleRepair() {
+		const vaultId = $page.params.vault;
+		if (!vaultId) return;
 		try {
-			const result = await apiFetch<{ reindexed: number }>('/sync/repair', { method: 'POST' });
+			const result = await apiFetch<{ reindexed: number }>(`/vaults/${encodeURIComponent(vaultId)}/sync/repair`, { method: 'POST' });
 			repairMsg = `Reindexed ${result.reindexed} files`;
 		} catch {
 			repairMsg = 'Repair failed';
@@ -23,6 +29,19 @@
 		if (repairTimer) clearTimeout(repairTimer);
 		repairTimer = setTimeout(() => { repairMsg = null; }, 4000);
 	}
+
+	onMount(async () => {
+		try {
+			const config = await getConfig();
+			if (config.vaults.length === 0 && $page.url.pathname !== '/setup') {
+				goto('/setup');
+				return;
+			}
+			vaults = config.vaults;
+		} catch {
+			// Backend unreachable — let each page handle its own error state
+		}
+	});
 
 	onMount(() => {
 		const es = new EventSource('/api/events');
@@ -33,22 +52,19 @@
 			syncStore.setConnected();
 		};
 
-		// Debounce: only go amber if the connection is lost for >3s.
-		// The EventSource fires onerror on every reconnection attempt, so without
-		// this the badge flickers amber on any brief hiccup.
 		es.onerror = () => {
 			if (!errorTimer) {
 				errorTimer = setTimeout(() => syncStore.setReconnecting(), 3000);
 			}
 		};
 
-		// Any received event proves the connection is alive — clear reconnecting status.
 		es.addEventListener('ping', () => syncStore.setConnected());
 
 		es.onmessage = (e) => {
 			syncStore.setConnected();
-			const event = JSON.parse(e.data) as { type: string; folder_path: string };
+			const event = JSON.parse(e.data) as { type: string; folder_path: string; vault_id?: string };
 			if (event.type === 'record_changed' || event.type === 'record_deleted') {
+				if (event.vault_id && event.vault_id !== recordsStore.currentVaultId) return;
 				const currentFolder = recordsStore.currentFolder;
 				if (currentFolder && event.folder_path === currentFolder + '/') {
 					recordsStore.invalidate();
@@ -61,15 +77,46 @@
 			es.close();
 		};
 	});
+
+	function closeSwitcher(e: MouseEvent) {
+		if (!(e.target as HTMLElement).closest('.vault-switcher')) {
+			switcherOpen = false;
+		}
+	}
 </script>
 
 <svelte:head>
 	<link rel="icon" href={favicon} />
 </svelte:head>
 
+<svelte:document onclick={closeSwitcher} />
+
 <div class="app-shell">
 	<header>
 		<a href="/" class="home-link">Obsidian Manager</a>
+
+		{#if $page.params.vault}
+			<div class="vault-switcher">
+				<button class="switcher-btn" onclick={() => switcherOpen = !switcherOpen}>
+					{vaults.find((v) => v.id === $page.params.vault)?.name ?? $page.params.vault}
+					<span class="caret">▾</span>
+				</button>
+				{#if switcherOpen}
+					<div class="switcher-dropdown">
+						{#each vaults as v}
+							<a
+								class="switcher-item"
+								class:active={v.id === $page.params.vault}
+								href="/{encodeURIComponent(v.id)}"
+								onclick={() => switcherOpen = false}
+							>{v.name}</a>
+						{/each}
+						<a class="switcher-item add-item" href="/setup" onclick={() => switcherOpen = false}>＋ Add workspace</a>
+					</div>
+				{/if}
+			</div>
+		{/if}
+
 		<SyncBadge />
 	</header>
 
@@ -81,7 +128,9 @@
 		{#if repairMsg}
 			<span class="repair-msg">{repairMsg}</span>
 		{/if}
-		<button class="repair-btn" onclick={handleRepair}>Repair index</button>
+		{#if $page.params.vault}
+			<button class="repair-btn" onclick={handleRepair}>Repair index</button>
+		{/if}
 	</footer>
 </div>
 
@@ -101,11 +150,67 @@
 		padding: 10px 20px;
 		border-bottom: 1px solid #e5e7eb;
 		background: #fff;
+		gap: 12px;
 	}
 	.home-link {
 		font-weight: 600;
 		text-decoration: none;
 		color: #111;
+	}
+	.vault-switcher {
+		position: relative;
+		flex: 1;
+	}
+	.switcher-btn {
+		background: none;
+		border: 1px solid #e5e7eb;
+		border-radius: 6px;
+		padding: 4px 10px;
+		font-size: 0.875rem;
+		font-weight: 500;
+		color: #374151;
+		cursor: pointer;
+		display: flex;
+		align-items: center;
+		gap: 6px;
+	}
+	.switcher-btn:hover {
+		border-color: #6366f1;
+		color: #111;
+	}
+	.caret {
+		font-size: 0.7rem;
+		color: #9ca3af;
+	}
+	.switcher-dropdown {
+		position: absolute;
+		top: calc(100% + 4px);
+		left: 0;
+		min-width: 180px;
+		background: #fff;
+		border: 1px solid #e5e7eb;
+		border-radius: 8px;
+		box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+		z-index: 100;
+		overflow: hidden;
+	}
+	.switcher-item {
+		display: block;
+		padding: 8px 14px;
+		font-size: 0.875rem;
+		color: #374151;
+		text-decoration: none;
+	}
+	.switcher-item:hover {
+		background: #f3f4f6;
+	}
+	.switcher-item.active {
+		color: #6366f1;
+		font-weight: 600;
+	}
+	.add-item {
+		border-top: 1px solid #f3f4f6;
+		color: #6366f1;
 	}
 	main {
 		flex: 1;

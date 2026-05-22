@@ -25,8 +25,9 @@
 
 		const isModified = e.metaKey || e.ctrlKey;
 		if (isModified) {
+			const vaultId = recordsStore.currentVaultId;
 			const folder = resolvedRecord.folder_path.replace(/\/$/, '');
-			goto(`/${encodeURIComponent(folder)}/${encodeURIComponent(resolvedRecord.filename)}`);
+			goto(`/${encodeURIComponent(vaultId!)}/${encodeURIComponent(folder)}/${encodeURIComponent(resolvedRecord.filename)}`);
 			return;
 		}
 

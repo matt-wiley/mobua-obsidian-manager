@@ -8,6 +8,7 @@
 	import { deleteRecord } from '$lib/api/records';
 	import PageView from '$lib/components/page/PageView.svelte';
 
+	const vault = get(page).params.vault as string;
 	const folder = get(page).params.folder as string;
 	const filename = decodeURIComponent(get(page).params.record as string);
 
@@ -15,8 +16,8 @@
 
 	onMount(async () => {
 		await Promise.all([
-			recordsStore.load(folder),
-			schemaStore.load(folder)
+			recordsStore.load(vault, folder),
+			schemaStore.load(vault, folder)
 		]);
 	});
 
@@ -30,8 +31,8 @@
 		if (!confirmed) return;
 		deleting = true;
 		try {
-			await deleteRecord(record.id);
-			await goto(`/${encodeURIComponent(folder)}`);
+			await deleteRecord(vault, record.id);
+			await goto(`/${encodeURIComponent(vault)}/${encodeURIComponent(folder)}`);
 		} finally {
 			deleting = false;
 		}
@@ -40,7 +41,7 @@
 
 <div class="page-container">
 	<nav class="breadcrumb">
-		<a href="/{folder}">{folder}</a>
+		<a href="/{encodeURIComponent(vault)}/{encodeURIComponent(folder)}">{folder}</a>
 		<span class="sep">›</span>
 		<span>{filename}</span>
 
