@@ -169,6 +169,41 @@
 
 	const fieldMap = $derived(Object.fromEntries(schema.map((f) => [f.field_name, f])));
 
+	// --- Column visibility (persisted in localStorage) ----------------------
+
+	const hiddenKey = `col-hidden:${folder}`;
+
+	function loadHidden(): Set<string> {
+		try {
+			const stored = localStorage.getItem(hiddenKey);
+			if (stored) return new Set(JSON.parse(stored));
+		} catch { /* ignore */ }
+		return new Set();
+	}
+
+	let hiddenCols = $state<Set<string>>(loadHidden());
+
+	function saveHidden() {
+		localStorage.setItem(hiddenKey, JSON.stringify([...hiddenCols]));
+	}
+
+	function toggleColumn(colId: string) {
+		const next = new Set(hiddenCols);
+		if (next.has(colId)) {
+			next.delete(colId);
+		} else {
+			next.add(colId);
+			sortCriteria = sortCriteria.filter((s) => s.id !== colId);
+			saveSortCriteria();
+		}
+		hiddenCols = next;
+		saveHidden();
+	}
+
+	const visibleCols = $derived(allCols.filter((c) => !hiddenCols.has(c.id)));
+
+	let showColPanel = $state(false);
+
 	// --- Multi-field sort (persisted in localStorage) ------------------------
 
 	type SortCriterion = { id: string; dir: 'asc' | 'desc' };
@@ -255,11 +290,41 @@
 	<div class="save-error" role="alert">{saveError}</div>
 {/if}
 
-{#if isReordered}
-	<div class="toolbar">
+<div class="toolbar">
+	{#if isReordered}
 		<button class="reset-btn" onclick={resetOrder}>Reset column order</button>
+	{/if}
+	<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+	<div class="col-panel-anchor" onmouseleave={() => (showColPanel = false)}>
+		<button class="col-toggle-btn" onclick={() => (showColPanel = !showColPanel)}>
+			Columns{hiddenCols.size > 0 ? ` (${hiddenCols.size} hidden)` : ''}
+		</button>
+		{#if showColPanel}
+			<div class="col-panel" role="menu">
+				{#each baseCols as col (col.id)}
+					<label class="col-panel-row">
+						<input
+							type="checkbox"
+							checked={!hiddenCols.has(col.id)}
+							onchange={() => toggleColumn(col.id)}
+							disabled={col.id === 'filename'}
+						/>
+						{col.label}
+					</label>
+				{/each}
+				<div class="col-panel-footer">
+					<button
+						class="show-all-btn"
+						disabled={hiddenCols.size === 0}
+						onclick={() => { hiddenCols = new Set(); saveHidden(); }}
+					>
+						Show all
+					</button>
+				</div>
+			</div>
+		{/if}
 	</div>
-{/if}
+</div>
 
 {#if records.length === 0}
 	<p class="empty">No records in this folder yet.</p>
@@ -268,7 +333,7 @@
 		<table>
 			<thead>
 				<tr>
-					{#each allCols as col (col.id)}
+					{#each visibleCols as col (col.id)}
 						{@const sortIdx = sortCriteria.findIndex((s) => s.id === col.id)}
 						<th
 							style="width: {colW(col.id, col.defaultW)}px"
@@ -276,7 +341,6 @@
 							class:drag-over-left={dropTargetId === col.id && dropSide === 'left'}
 							class:drag-over-right={dropTargetId === col.id && dropSide === 'right'}
 							class:dragging={dragId === col.id}
-							onclick={() => handleSortClick(col.id)}
 							ondragstart={(e) => onDragStart(e, col.id)}
 							ondragover={(e) => onDragOver(e, col.id)}
 							ondragleave={onDragLeave}
@@ -289,6 +353,7 @@
 								onResizeStart={resizeHandler(col.id, col.defaultW)}
 								sortDir={sortIdx !== -1 ? sortCriteria[sortIdx].dir : null}
 								sortPriority={sortCriteria.length > 1 ? sortIdx + 1 : null}
+								onSortClick={() => handleSortClick(col.id)}
 							/>
 						</th>
 					{/each}
@@ -297,7 +362,7 @@
 			<tbody>
 				{#each sortedRecords as record (record.id)}
 					<tr>
-						{#each allCols as col (col.id)}
+						{#each visibleCols as col (col.id)}
 							<td style="width: {colW(col.id, col.defaultW)}px">
 								{#if col.isFilename}
 									<div class="cell-inner">
@@ -334,7 +399,6 @@
 		border-collapse: collapse;
 		table-layout: fixed;
 		width: max-content;
-		min-width: 100%;
 		font-size: 0.9rem;
 	}
 	thead {
@@ -403,6 +467,8 @@
 	.toolbar {
 		display: flex;
 		justify-content: flex-end;
+		align-items: center;
+		gap: 8px;
 		margin-bottom: 6px;
 	}
 	.reset-btn {
@@ -417,5 +483,76 @@
 	.reset-btn:hover {
 		color: #6b7280;
 		background: #f3f4f6;
+	}
+	.col-panel-anchor {
+		position: relative;
+	}
+	.col-toggle-btn {
+		background: none;
+		border: 1px solid #e5e7eb;
+		cursor: pointer;
+		font-size: 0.75rem;
+		color: #6b7280;
+		padding: 2px 8px;
+		border-radius: 4px;
+	}
+	.col-toggle-btn:hover {
+		background: #f3f4f6;
+		color: #374151;
+	}
+	.col-panel {
+		position: absolute;
+		right: 0;
+		top: calc(100% + 4px);
+		z-index: 50;
+		background: #fff;
+		border: 1px solid #e5e7eb;
+		border-radius: 6px;
+		box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+		padding: 6px 0;
+		min-width: 160px;
+	}
+	.col-panel-row {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		padding: 5px 12px;
+		font-size: 0.8125rem;
+		color: #374151;
+		cursor: pointer;
+		white-space: nowrap;
+	}
+	.col-panel-row:hover {
+		background: #f9fafb;
+	}
+	.col-panel-row input {
+		cursor: pointer;
+	}
+	.col-panel-row input:disabled {
+		cursor: default;
+		opacity: 0.4;
+	}
+	.col-panel-footer {
+		border-top: 1px solid #f3f4f6;
+		padding: 5px 8px 3px;
+		margin-top: 2px;
+	}
+	.show-all-btn {
+		background: none;
+		border: none;
+		cursor: pointer;
+		font-size: 0.75rem;
+		color: #6366f1;
+		padding: 2px 4px;
+		border-radius: 4px;
+		width: 100%;
+		text-align: left;
+	}
+	.show-all-btn:hover:not(:disabled) {
+		background: #eef2ff;
+	}
+	.show-all-btn:disabled {
+		color: #c7d2fe;
+		cursor: default;
 	}
 </style>

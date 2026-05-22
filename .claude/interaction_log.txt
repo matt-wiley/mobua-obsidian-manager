@@ -35,3 +35,13 @@
 2026-05-22 02:34 | Claude confirmed returning to the project directory `/Users/matt/projects/mobua-obsidian-manager`.
 2026-05-22 02:34 | Claude recapped multiple bug fixes and feature improvements made during the session, including auto-saving in MarkdownField, debounced file operations, markdown rendering, and table UX enhancements like column resizing, reordering, and multi-field sorting.
 2026-05-22 02:36 | User issued a "clear" command, but Claude provided no response.
+2026-05-22 02:38 | Claude reviewed the project documentation and confirmed that "Notion Lite" (SvelteKit + FastAPI + SQLite) has completed all 10 phases with recent work on auto-save, markdown rendering, and table features, while identifying four deferred v1 limitations.
+2026-05-22 02:43 | Claude completed a column visibility feature implementation with a toolbar button that toggles a dropdown to show/hide columns, persists hidden state to localStorage, and prevents hiding the Name column.
+2026-05-22 02:45 | Claude explained that a "Show all" button now appears at the bottom of a panel (separated by a divider) when columns are hidden, and clicking it clears the `hiddenCols` state while persisting the change without affecting sort criteria.
+2026-05-22 02:47 | Claude modified a table UI component to prevent popovers from closing during updates and made the "show all" button always visible but disabled when no columns are hidden.
+2026-05-22 02:52 | Claude implemented fixed-width columns that respect user-set dimensions without stretching to fill the viewport.
+2026-05-22 02:54 | Claude refactored the table sort UI to use an explicit `⇅` button on column hover instead of header label clicks, with proper event handling and dynamic tooltips describing the sort cycle.
+2026-05-22 02:57 | Claude modified a table's column header drag functionality by removing draggable attributes from `<th>` elements and adding a centered dot-grip drag handle with hover effects and grab cursor styling.
+2026-05-22 03:01 | Claude explained CSS layout changes to a table header component, adding flexbox alignment to the `th` element and redesigning the handle as a centered pill-shaped control with a dot-grid pattern.
+2026-05-22 03:03 | Claude restored the table layout by repositioning the drag handle to a small vertical dot grid at `top: 4px` and decided against implementing a straddling design due to conflicting CSS overflow requirements.
+2026-05-22 03:05 | Claude restored drag-to-reorder functionality to the full header while preserving sort button functionality through `e.stopPropagation()` and removed all handle code.

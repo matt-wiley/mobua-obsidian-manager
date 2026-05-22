@@ -5,7 +5,8 @@
 		isResizing = false,
 		onResizeStart,
 		sortDir = null,
-		sortPriority = null
+		sortPriority = null,
+		onSortClick
 	}: {
 		label: string;
 		canResize?: boolean;
@@ -13,14 +14,20 @@
 		onResizeStart?: (e: MouseEvent | TouchEvent) => void;
 		sortDir?: 'asc' | 'desc' | null;
 		sortPriority?: number | null;
+		onSortClick?: () => void;
 	} = $props();
 </script>
 
 <span class="label">{label}</span>
-{#if sortDir}
-	<span class="sort-indicator">
-		{sortDir === 'asc' ? '▲' : '▼'}{#if sortPriority !== null && sortPriority > 1}<sup>{sortPriority}</sup>{/if}
-	</span>
+{#if onSortClick}
+	<button
+		class="sort-btn"
+		class:active={sortDir !== null}
+		onclick={(e) => { e.stopPropagation(); onSortClick!(); }}
+		title={sortDir === null ? 'Sort ascending' : sortDir === 'asc' ? 'Sort descending' : 'Clear sort'}
+	>
+		{#if sortDir === 'asc'}▲{:else if sortDir === 'desc'}▼{:else}⇅{/if}{#if sortPriority !== null && sortPriority > 1}<sup>{sortPriority}</sup>{/if}
+	</button>
 {/if}
 {#if canResize}
 	<!-- svelte-ignore a11y_no_static_element_interactions -->
@@ -35,17 +42,43 @@
 {/if}
 
 <style>
-	.label {
+.label {
 		flex: 1;
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
 	}
-	.sort-indicator {
-		font-size: 10px;
-		color: #6366f1;
-		margin-left: 4px;
+	.sort-btn {
 		flex-shrink: 0;
+		background: none;
+		border: 1px solid transparent;
+		border-radius: 3px;
+		cursor: pointer;
+		font-size: 10px;
+		color: #9ca3af;
+		padding: 1px 3px;
+		margin-left: 2px;
+		line-height: 1;
+		opacity: 0;
+	}
+	:global(th:hover) .sort-btn,
+	.sort-btn.active {
+		opacity: 1;
+	}
+	.sort-btn.active {
+		color: #6366f1;
+		border-color: #c7d2fe;
+		background: #eef2ff;
+	}
+	.sort-btn:hover {
+		border-color: #d1d5db;
+		background: #f3f4f6;
+		color: #374151;
+	}
+	.sort-btn.active:hover {
+		border-color: #a5b4fc;
+		background: #e0e7ff;
+		color: #4f46e5;
 	}
 	.resizer {
 		position: absolute;
