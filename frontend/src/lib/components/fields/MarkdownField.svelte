@@ -1,10 +1,21 @@
 <script lang="ts">
 	import { onDestroy } from 'svelte';
 	import { marked } from 'marked';
+	import hljs from 'highlight.js';
 	import { EditorView, keymap } from '@codemirror/view';
 	import { EditorState } from '@codemirror/state';
 	import { markdown } from '@codemirror/lang-markdown';
 	import { defaultKeymap, history, historyKeymap } from '@codemirror/commands';
+
+	marked.use({
+		renderer: {
+			code({ text, lang }) {
+				const language = lang && hljs.getLanguage(lang) ? lang : 'plaintext';
+				const highlighted = hljs.highlight(text, { language }).value;
+				return `<pre><code class="hljs language-${language}">${highlighted}</code></pre>`;
+			}
+		}
+	});
 
 	let {
 		value,
@@ -104,6 +115,8 @@
 {/if}
 
 <style>
+	@import 'highlight.js/styles/github.css';
+
 	.editor-wrap {
 		width: 100%;
 	}
@@ -134,7 +147,8 @@
 	.markdown-body :global(ul) { margin: 0.25em 0; padding-left: 1.5em; }
 	.markdown-body :global(ol) { margin: 0.25em 0; padding-left: 1.5em; }
 	.markdown-body :global(code) { background: #f3f4f6; padding: 0.1em 0.3em; border-radius: 3px; font-size: 13px; }
-	.markdown-body :global(pre) { background: #f3f4f6; padding: 0.75em; border-radius: 4px; overflow-x: auto; }
+	.markdown-body :global(pre) { background: #f6f8fa; padding: 0; border-radius: 6px; overflow-x: auto; }
+	.markdown-body :global(pre code.hljs) { background: transparent; padding: 0.75em; border-radius: 6px; font-size: 13px; }
 	.markdown-body :global(blockquote) { border-left: 3px solid #d1d5db; margin: 0.5em 0; padding-left: 0.75em; color: #6b7280; }
 	.markdown-body :global(a) { color: #6366f1; text-decoration: underline; }
 	.empty {
