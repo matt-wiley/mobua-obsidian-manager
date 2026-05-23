@@ -179,3 +179,39 @@ def get_col_widths(conn: sqlite3.Connection, folder_path: str) -> list[sqlite3.R
         "SELECT field_name, width FROM col_widths WHERE folder_path = ?",
         (folder_path,),
     ).fetchall()
+
+
+# ---------------------------------------------------------------------------
+# Views
+# ---------------------------------------------------------------------------
+
+def get_views(conn: sqlite3.Connection, folder_path: str) -> list[sqlite3.Row]:
+    return conn.execute(
+        "SELECT * FROM views WHERE folder_path = ? ORDER BY created_at",
+        (folder_path,),
+    ).fetchall()
+
+
+def create_view(
+    conn: sqlite3.Connection,
+    *,
+    id: str,
+    folder_path: str,
+    name: str,
+    filters: list,
+    sort: list,
+    col_order: list,
+    hidden_cols: list,
+    created_at: str,
+) -> None:
+    conn.execute(
+        """
+        INSERT INTO views (id, folder_path, name, filters, sort, col_order, hidden_cols, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        """,
+        (id, folder_path, name, _dumps(filters), _dumps(sort), _dumps(col_order), _dumps(hidden_cols), created_at),
+    )
+
+
+def delete_view(conn: sqlite3.Connection, view_id: str) -> None:
+    conn.execute("DELETE FROM views WHERE id = ?", (view_id,))

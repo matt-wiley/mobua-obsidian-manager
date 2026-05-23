@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { VaultRecord, RecordUpdate } from '$lib/api/records';
-	import type { SchemaField } from '$lib/api/folders';
-	import { setColWidth } from '$lib/api/folders';
+	import type { SchemaField, View } from '$lib/api/folders';
+	import { setColWidth, getViews, createView, deleteView } from '$lib/api/folders';
 	import { recordsStore } from '$lib/stores/records.svelte';
 	import TableCell from './TableCell.svelte';
 	import ColumnHeader from './ColumnHeader.svelte';
@@ -416,6 +416,56 @@
 			})
 	);
 
+	// --- Views (persisted in DB via API) ------------------------------------
+
+	let views = $state<View[]>([]);
+	let showViewPanel = $state(false);
+	let savingView = $state(false);
+	let newViewName = $state('');
+	let showSaveForm = $state(false);
+
+	$effect(() => {
+		const v = vault, f = folder;
+		getViews(v, f).then((result) => { views = result; });
+	});
+
+	function applyView(view: View) {
+		colOrder = view.col_order.length ? view.col_order : baseCols.map((c) => c.id);
+		hiddenCols = new Set(view.hidden_cols);
+		filters = view.filters as FilterCriterion[];
+		sortCriteria = view.sort as SortCriterion[];
+		saveOrder();
+		saveHidden();
+		saveFilters();
+		saveSortCriteria();
+		showViewPanel = false;
+	}
+
+	async function handleSaveView() {
+		const name = newViewName.trim();
+		if (!name) return;
+		savingView = true;
+		try {
+			const created = await createView(vault, folder, {
+				name,
+				filters,
+				sort: sortCriteria,
+				col_order: colOrder,
+				hidden_cols: [...hiddenCols],
+			});
+			views = [...views, created];
+			newViewName = '';
+			showSaveForm = false;
+		} finally {
+			savingView = false;
+		}
+	}
+
+	async function handleDeleteView(id: string) {
+		await deleteView(vault, folder, id);
+		views = views.filter((v) => v.id !== id);
+	}
+
 	// --- Save handler with error feedback -----------------------------------
 
 	let saveError = $state<string | null>(null);
@@ -448,6 +498,48 @@
 	{#if isReordered}
 		<button class="reset-btn" onclick={resetOrder}>Reset column order</button>
 	{/if}
+	<div class="view-panel-anchor">
+		<button class="view-btn" onclick={() => { showViewPanel = !showViewPanel; showSaveForm = false; }}>
+			Views{views.length > 0 ? ` (${views.length})` : ''}
+		</button>
+		{#if showViewPanel}
+			<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+			<div class="view-panel" role="dialog" aria-label="Saved views" onmouseleave={() => { if (!showSaveForm) showViewPanel = false; }}>
+				{#if views.length === 0 && !showSaveForm}
+					<p class="view-empty-hint">No saved views.</p>
+				{:else}
+					<ul class="view-list">
+						{#each views as view (view.id)}
+							<li class="view-row">
+								<button class="view-apply-btn" onclick={() => applyView(view)}>{view.name}</button>
+								<button class="view-delete-btn" onclick={() => handleDeleteView(view.id)} aria-label="Delete view">✕</button>
+							</li>
+						{/each}
+					</ul>
+				{/if}
+				<div class="view-panel-footer">
+					{#if showSaveForm}
+						<div class="view-save-form">
+							<!-- svelte-ignore a11y_autofocus -->
+							<input
+								autofocus
+								class="view-name-input"
+								placeholder="View name"
+								bind:value={newViewName}
+								onkeydown={(e) => { if (e.key === 'Enter') handleSaveView(); if (e.key === 'Escape') { showSaveForm = false; newViewName = ''; } }}
+							/>
+							<button class="view-save-confirm-btn" onclick={handleSaveView} disabled={savingView || !newViewName.trim()}>
+								{savingView ? '…' : 'Save'}
+							</button>
+							<button class="view-save-cancel-btn" onclick={() => { showSaveForm = false; newViewName = ''; }}>Cancel</button>
+						</div>
+					{:else}
+						<button class="view-save-btn" onclick={() => { showSaveForm = true; }}>+ Save current view</button>
+					{/if}
+				</div>
+			</div>
+		{/if}
+	</div>
 	<div class="filter-panel-anchor">
 		<button
 			class="filter-btn"
@@ -919,6 +1011,151 @@
 		margin-left: auto;
 	}
 	.filter-clear-btn:hover {
+		color: #6b7280;
+		background: #f3f4f6;
+	}
+	.view-panel-anchor {
+		position: relative;
+	}
+	.view-btn {
+		background: none;
+		border: 1px solid #e5e7eb;
+		cursor: pointer;
+		font-size: 0.75rem;
+		color: #6b7280;
+		padding: 2px 8px;
+		border-radius: 4px;
+	}
+	.view-btn:hover {
+		background: #f3f4f6;
+		color: #374151;
+	}
+	.view-panel {
+		position: absolute;
+		right: 0;
+		top: calc(100% + 4px);
+		z-index: 50;
+		background: #fff;
+		border: 1px solid #e5e7eb;
+		border-radius: 6px;
+		box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+		padding: 8px 0 4px;
+		min-width: 200px;
+	}
+	.view-empty-hint {
+		color: #9ca3af;
+		font-size: 0.8125rem;
+		padding: 4px 12px 8px;
+		margin: 0;
+	}
+	.view-list {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+	}
+	.view-row {
+		display: flex;
+		align-items: center;
+		gap: 4px;
+		padding: 2px 8px 2px 4px;
+	}
+	.view-row:hover {
+		background: #f9fafb;
+	}
+	.view-apply-btn {
+		flex: 1;
+		background: none;
+		border: none;
+		cursor: pointer;
+		font-size: 0.8125rem;
+		color: #374151;
+		padding: 4px 8px;
+		border-radius: 4px;
+		text-align: left;
+	}
+	.view-apply-btn:hover {
+		color: #6366f1;
+	}
+	.view-delete-btn {
+		background: none;
+		border: none;
+		cursor: pointer;
+		color: #9ca3af;
+		font-size: 0.75rem;
+		padding: 2px 4px;
+		border-radius: 4px;
+		line-height: 1;
+		flex-shrink: 0;
+	}
+	.view-delete-btn:hover {
+		color: #ef4444;
+		background: #fee2e2;
+	}
+	.view-panel-footer {
+		border-top: 1px solid #f3f4f6;
+		padding: 6px 8px 4px;
+		margin-top: 4px;
+	}
+	.view-save-btn {
+		background: none;
+		border: none;
+		cursor: pointer;
+		font-size: 0.75rem;
+		color: #6366f1;
+		padding: 2px 4px;
+		border-radius: 4px;
+		width: 100%;
+		text-align: left;
+	}
+	.view-save-btn:hover {
+		background: #eef2ff;
+	}
+	.view-save-form {
+		display: flex;
+		align-items: center;
+		gap: 4px;
+	}
+	.view-name-input {
+		flex: 1;
+		border: 1px solid #e5e7eb;
+		border-radius: 4px;
+		font-size: 0.8125rem;
+		color: #374151;
+		padding: 3px 6px;
+		min-width: 0;
+	}
+	.view-name-input:focus {
+		outline: none;
+		border-color: #6366f1;
+		box-shadow: 0 0 0 2px #eef2ff;
+	}
+	.view-save-confirm-btn {
+		background: #6366f1;
+		color: #fff;
+		border: none;
+		cursor: pointer;
+		font-size: 0.75rem;
+		padding: 3px 8px;
+		border-radius: 4px;
+		white-space: nowrap;
+	}
+	.view-save-confirm-btn:hover:not(:disabled) {
+		background: #4f46e5;
+	}
+	.view-save-confirm-btn:disabled {
+		opacity: 0.5;
+		cursor: default;
+	}
+	.view-save-cancel-btn {
+		background: none;
+		border: none;
+		cursor: pointer;
+		font-size: 0.75rem;
+		color: #9ca3af;
+		padding: 3px 4px;
+		border-radius: 4px;
+	}
+	.view-save-cancel-btn:hover {
 		color: #6b7280;
 		background: #f3f4f6;
 	}
