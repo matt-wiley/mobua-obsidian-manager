@@ -64,3 +64,7 @@
 2026-05-22 16:12 | Claude explained that the 404 error stems from the Vite proxy no longer stripping `/api` from requests while the old backend lacks `/api`-prefixed routes, and provided the correct command to restart the backend with the new module path.
 2026-05-22 16:14 | Claude consolidated backend files by removing `main.py`, `config.py`, and `vault.py` from `backend/` and relocating them to `backend/obsidian_manager/`.
 2026-05-22 16:16 | Claude confirmed that the "＋ Add workspace" button is now persistently visible on the home page after loading completes, regardless of whether the user has zero or multiple vaults.
+2026-05-22 18:57 | Claude implemented a complete filter feature with type-aware operators, persistent storage, and an interactive panel that allows users to create multiple AND-ed filter conditions across different field types.
+2026-05-23 15:17 | Claude reviewed the previous session's filter feature implementation and offered options to continue with testing/polishing filters or moving to new work, with uncommitted changes in the DataTable component.
+2026-05-23 15:18 | Claude committed a vault-scoped routing feature (`c1df5a5`) and asked whether to merge the worktree branch (3 commits behind `origin/main`) back into main or continue development.
+2026-05-23 15:20 | Claude clarified that the commit went to an isolated worktree branch instead of main, and asked the user to confirm whether they wanted to commit the unstaged DataTable.svelte filter changes to main instead.

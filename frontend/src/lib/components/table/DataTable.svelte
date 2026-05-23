@@ -206,6 +206,158 @@
 
 	let showColPanel = $state(false);
 
+	// --- Row filtering (persisted in localStorage) --------------------------
+
+	type FilterOp =
+		| 'contains' | 'not_contains'
+		| 'is_empty' | 'is_not_empty'
+		| 'eq' | 'lt' | 'lte' | 'gt' | 'gte'
+		| 'on' | 'before' | 'after';
+
+	type FilterCriterion = { field: string; op: FilterOp; value: string };
+
+	const TEXT_OPS: { value: FilterOp; label: string }[] = [
+		{ value: 'contains',     label: 'contains' },
+		{ value: 'not_contains', label: 'does not contain' },
+		{ value: 'is_empty',     label: 'is empty' },
+		{ value: 'is_not_empty', label: 'is not empty' },
+	];
+	const NUMBER_OPS: { value: FilterOp; label: string }[] = [
+		{ value: 'eq',           label: '=' },
+		{ value: 'lt',           label: '<' },
+		{ value: 'lte',          label: '≤' },
+		{ value: 'gt',           label: '>' },
+		{ value: 'gte',          label: '≥' },
+		{ value: 'is_empty',     label: 'is empty' },
+		{ value: 'is_not_empty', label: 'is not empty' },
+	];
+	const DATE_OPS: { value: FilterOp; label: string }[] = [
+		{ value: 'on',           label: 'is' },
+		{ value: 'before',       label: 'before' },
+		{ value: 'after',        label: 'after' },
+		{ value: 'is_empty',     label: 'is empty' },
+		{ value: 'is_not_empty', label: 'is not empty' },
+	];
+
+	const filterKey = `col-filter:${folder}`;
+
+	function loadFilters(): FilterCriterion[] {
+		try {
+			const stored = localStorage.getItem(filterKey);
+			if (stored) return JSON.parse(stored);
+		} catch { /* ignore */ }
+		return [];
+	}
+
+	let filters = $state<FilterCriterion[]>(loadFilters());
+	let showFilterPanel = $state(false);
+
+	function saveFilters() {
+		localStorage.setItem(filterKey, JSON.stringify(filters));
+	}
+
+	function getFieldType(field: string): string {
+		if (field === 'filename') return 'text';
+		return fieldMap[field]?.field_type ?? 'text';
+	}
+
+	function getOpsForType(type: string): { value: FilterOp; label: string }[] {
+		if (type === 'number') return NUMBER_OPS;
+		if (type === 'date') return DATE_OPS;
+		return TEXT_OPS;
+	}
+
+	function defaultOpForType(type: string): FilterOp {
+		if (type === 'number') return 'eq';
+		if (type === 'date') return 'on';
+		return 'contains';
+	}
+
+	function addFilter() {
+		const field = baseCols[0]?.id ?? 'filename';
+		const type = getFieldType(field);
+		filters = [...filters, { field, op: defaultOpForType(type), value: '' }];
+		saveFilters();
+	}
+
+	function removeFilter(idx: number) {
+		filters = filters.filter((_, i) => i !== idx);
+		saveFilters();
+	}
+
+	function updateFilterField(idx: number, field: string) {
+		const type = getFieldType(field);
+		filters = filters.map((f, i) =>
+			i === idx ? { field, op: defaultOpForType(type), value: '' } : f
+		);
+		saveFilters();
+	}
+
+	function updateFilterOp(idx: number, op: FilterOp) {
+		filters = filters.map((f, i) => i === idx ? { ...f, op } : f);
+		saveFilters();
+	}
+
+	function updateFilterValue(idx: number, value: string) {
+		filters = filters.map((f, i) => i === idx ? { ...f, value } : f);
+		saveFilters();
+	}
+
+	const needsValue = (op: FilterOp) => op !== 'is_empty' && op !== 'is_not_empty';
+
+	function getFilterRaw(record: VaultRecord, field: string): string {
+		if (field === 'filename') return record.filename;
+		const f = fieldMap[field];
+		if (!f) return '';
+		const raw = f.source === 'frontmatter' ? record.frontmatter[field] : record.sections[field];
+		if (raw === null || raw === undefined) return '';
+		return String(raw);
+	}
+
+	function matchesCriterion(record: VaultRecord, criterion: FilterCriterion): boolean {
+		const { field, op, value } = criterion;
+		const raw = getFilterRaw(record, field);
+
+		if (op === 'is_empty')     return raw === '';
+		if (op === 'is_not_empty') return raw !== '';
+
+		const type = getFieldType(field);
+
+		if (type === 'number') {
+			const numRaw = parseFloat(raw);
+			const numVal = parseFloat(value);
+			if (isNaN(numRaw)) return false;
+			if (!value || isNaN(numVal)) return true; // incomplete filter → pass-through
+			if (op === 'eq')  return numRaw === numVal;
+			if (op === 'lt')  return numRaw < numVal;
+			if (op === 'lte') return numRaw <= numVal;
+			if (op === 'gt')  return numRaw > numVal;
+			if (op === 'gte') return numRaw >= numVal;
+		}
+
+		if (type === 'date') {
+			if (!value) return true; // incomplete filter → pass-through
+			if (op === 'on')     return raw === value;
+			if (op === 'before') return raw !== '' && raw < value;
+			if (op === 'after')  return raw !== '' && raw > value;
+		}
+
+		// text / url / relation / markdown
+		if (!value) return true; // incomplete filter → pass-through
+		const lRaw = raw.toLowerCase();
+		const lVal = value.toLowerCase();
+		if (op === 'contains')     return lRaw.includes(lVal);
+		if (op === 'not_contains') return !lRaw.includes(lVal);
+
+		return true;
+	}
+
+	const filteredRecords = $derived(
+		filters.length === 0
+			? records
+			: records.filter((r) => filters.every((f) => matchesCriterion(r, f)))
+	);
+
 	// --- Multi-field sort (persisted in localStorage) ------------------------
 
 	type SortCriterion = { id: string; dir: 'asc' | 'desc' };
@@ -252,8 +404,8 @@
 
 	const sortedRecords = $derived(
 		sortCriteria.length === 0
-			? records
-			: [...records].sort((a, b) => {
+			? filteredRecords
+			: [...filteredRecords].sort((a, b) => {
 				for (const { id, dir } of sortCriteria) {
 					const av = getSortValue(a, id);
 					const bv = getSortValue(b, id);
@@ -296,6 +448,84 @@
 	{#if isReordered}
 		<button class="reset-btn" onclick={resetOrder}>Reset column order</button>
 	{/if}
+	<div class="filter-panel-anchor">
+		<button
+			class="filter-btn"
+			class:filter-active={filters.length > 0}
+			onclick={() => (showFilterPanel = !showFilterPanel)}
+		>
+			Filter{filters.length > 0 ? ` (${filters.length})` : ''}
+		</button>
+		{#if showFilterPanel}
+			<div class="filter-panel" role="dialog" aria-label="Row filters">
+				{#if filters.length === 0}
+					<p class="filter-empty-hint">No filters applied.</p>
+				{:else}
+					<ul class="filter-list">
+						{#each filters as criterion, idx (idx)}
+							{@const type = getFieldType(criterion.field)}
+							{@const ops = getOpsForType(type)}
+							<li class="filter-row">
+								<select
+									class="filter-select filter-field-select"
+									value={criterion.field}
+									onchange={(e) => updateFilterField(idx, (e.currentTarget as HTMLSelectElement).value)}
+								>
+									{#each baseCols as col (col.id)}
+										<option value={col.id}>{col.label}</option>
+									{/each}
+								</select>
+								<select
+									class="filter-select filter-op-select"
+									value={criterion.op}
+									onchange={(e) => updateFilterOp(idx, (e.currentTarget as HTMLSelectElement).value as FilterOp)}
+								>
+									{#each ops as op (op.value)}
+										<option value={op.value}>{op.label}</option>
+									{/each}
+								</select>
+								{#if needsValue(criterion.op)}
+									{#if type === 'date'}
+										<input
+											type="date"
+											class="filter-value-input"
+											value={criterion.value}
+											oninput={(e) => updateFilterValue(idx, (e.currentTarget as HTMLInputElement).value)}
+										/>
+									{:else if type === 'number'}
+										<input
+											type="number"
+											class="filter-value-input"
+											placeholder="value"
+											value={criterion.value}
+											oninput={(e) => updateFilterValue(idx, (e.currentTarget as HTMLInputElement).value)}
+										/>
+									{:else}
+										<input
+											type="text"
+											class="filter-value-input"
+											placeholder="value"
+											value={criterion.value}
+											oninput={(e) => updateFilterValue(idx, (e.currentTarget as HTMLInputElement).value)}
+										/>
+									{/if}
+								{:else}
+									<span class="filter-value-spacer"></span>
+								{/if}
+								<button class="filter-remove-btn" onclick={() => removeFilter(idx)} aria-label="Remove filter">✕</button>
+							</li>
+						{/each}
+					</ul>
+				{/if}
+				<div class="filter-panel-footer">
+					<button class="filter-add-btn" onclick={addFilter}>+ Add filter</button>
+					{#if filters.length > 0}
+						<button class="filter-clear-btn" onclick={() => { filters = []; saveFilters(); }}>Clear all</button>
+					{/if}
+				</div>
+			</div>
+		{/if}
+	</div>
 	<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 	<div class="col-panel-anchor" onmouseleave={() => (showColPanel = false)}>
 		<button class="col-toggle-btn" onclick={() => (showColPanel = !showColPanel)}>
@@ -330,6 +560,8 @@
 
 {#if records.length === 0}
 	<p class="empty">No records in this folder yet.</p>
+{:else if filteredRecords.length === 0}
+	<p class="empty">No records match the active filters.</p>
 {:else}
 	<div class="table-wrap">
 		<table>
@@ -556,5 +788,138 @@
 	.show-all-btn:disabled {
 		color: #c7d2fe;
 		cursor: default;
+	}
+	.filter-panel-anchor {
+		position: relative;
+	}
+	.filter-btn {
+		background: none;
+		border: 1px solid #e5e7eb;
+		cursor: pointer;
+		font-size: 0.75rem;
+		color: #6b7280;
+		padding: 2px 8px;
+		border-radius: 4px;
+	}
+	.filter-btn:hover {
+		background: #f3f4f6;
+		color: #374151;
+	}
+	.filter-btn.filter-active {
+		border-color: #6366f1;
+		color: #6366f1;
+		background: #eef2ff;
+	}
+	.filter-panel {
+		position: absolute;
+		right: 0;
+		top: calc(100% + 4px);
+		z-index: 50;
+		background: #fff;
+		border: 1px solid #e5e7eb;
+		border-radius: 6px;
+		box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+		padding: 8px 0 4px;
+		min-width: 480px;
+	}
+	.filter-empty-hint {
+		color: #9ca3af;
+		font-size: 0.8125rem;
+		padding: 4px 12px 8px;
+		margin: 0;
+	}
+	.filter-list {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+	}
+	.filter-row {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		padding: 4px 10px;
+	}
+	.filter-row:hover {
+		background: #f9fafb;
+	}
+	.filter-select {
+		border: 1px solid #e5e7eb;
+		border-radius: 4px;
+		font-size: 0.8125rem;
+		color: #374151;
+		background: #fff;
+		padding: 2px 4px;
+		cursor: pointer;
+	}
+	.filter-field-select {
+		max-width: 140px;
+	}
+	.filter-op-select {
+		max-width: 140px;
+	}
+	.filter-value-input {
+		flex: 1;
+		border: 1px solid #e5e7eb;
+		border-radius: 4px;
+		font-size: 0.8125rem;
+		color: #374151;
+		padding: 2px 6px;
+		min-width: 0;
+	}
+	.filter-value-input:focus {
+		outline: none;
+		border-color: #6366f1;
+		box-shadow: 0 0 0 2px #eef2ff;
+	}
+	.filter-value-spacer {
+		flex: 1;
+	}
+	.filter-remove-btn {
+		background: none;
+		border: none;
+		cursor: pointer;
+		color: #9ca3af;
+		font-size: 0.75rem;
+		padding: 2px 4px;
+		border-radius: 4px;
+		line-height: 1;
+	}
+	.filter-remove-btn:hover {
+		color: #ef4444;
+		background: #fee2e2;
+	}
+	.filter-panel-footer {
+		border-top: 1px solid #f3f4f6;
+		padding: 6px 10px 4px;
+		margin-top: 4px;
+		display: flex;
+		gap: 8px;
+		align-items: center;
+	}
+	.filter-add-btn {
+		background: none;
+		border: none;
+		cursor: pointer;
+		font-size: 0.75rem;
+		color: #6366f1;
+		padding: 2px 4px;
+		border-radius: 4px;
+	}
+	.filter-add-btn:hover {
+		background: #eef2ff;
+	}
+	.filter-clear-btn {
+		background: none;
+		border: none;
+		cursor: pointer;
+		font-size: 0.75rem;
+		color: #9ca3af;
+		padding: 2px 4px;
+		border-radius: 4px;
+		margin-left: auto;
+	}
+	.filter-clear-btn:hover {
+		color: #6b7280;
+		background: #f3f4f6;
 	}
 </style>
