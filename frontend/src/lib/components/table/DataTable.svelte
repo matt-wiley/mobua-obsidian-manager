@@ -111,6 +111,7 @@
 	function resetOrder() {
 		localStorage.removeItem(orderKey);
 		colOrder = baseCols.map((c) => c.id);
+		activeViewId = null;
 	}
 
 	const isReordered = $derived(
@@ -160,6 +161,7 @@
 
 		colOrder = order;
 		saveOrder();
+		activeViewId = null;
 		dragId = null;
 		dropTargetId = null;
 	}
@@ -200,6 +202,7 @@
 		}
 		hiddenCols = next;
 		saveHidden();
+		activeViewId = null;
 	}
 
 	const visibleCols = $derived(allCols.filter((c) => !hiddenCols.has(c.id)));
@@ -278,11 +281,13 @@
 		const type = getFieldType(field);
 		filters = [...filters, { field, op: defaultOpForType(type), value: '' }];
 		saveFilters();
+		activeViewId = null;
 	}
 
 	function removeFilter(idx: number) {
 		filters = filters.filter((_, i) => i !== idx);
 		saveFilters();
+		activeViewId = null;
 	}
 
 	function updateFilterField(idx: number, field: string) {
@@ -291,16 +296,19 @@
 			i === idx ? { field, op: defaultOpForType(type), value: '' } : f
 		);
 		saveFilters();
+		activeViewId = null;
 	}
 
 	function updateFilterOp(idx: number, op: FilterOp) {
 		filters = filters.map((f, i) => i === idx ? { ...f, op } : f);
 		saveFilters();
+		activeViewId = null;
 	}
 
 	function updateFilterValue(idx: number, value: string) {
 		filters = filters.map((f, i) => i === idx ? { ...f, value } : f);
 		saveFilters();
+		activeViewId = null;
 	}
 
 	const needsValue = (op: FilterOp) => op !== 'is_empty' && op !== 'is_not_empty';
@@ -388,6 +396,7 @@
 			sortCriteria = sortCriteria.filter((_, i) => i !== idx);
 		}
 		saveSortCriteria();
+		activeViewId = null;
 	}
 
 	function getSortValue(record: VaultRecord, colId: string): string | number {
@@ -423,10 +432,21 @@
 	let savingView = $state(false);
 	let newViewName = $state('');
 	let showSaveForm = $state(false);
+	let activeViewId = $state<string | null>(null);
+
+	const defaultViewKey = `col-default-view:${folder}`;
+	let defaultViewId = $state<string | null>(localStorage.getItem(defaultViewKey));
 
 	$effect(() => {
 		const v = vault, f = folder;
-		getViews(v, f).then((result) => { views = result; });
+		getViews(v, f).then((result) => {
+			views = result;
+			const defId = localStorage.getItem(`col-default-view:${f}`);
+			if (defId) {
+				const def = result.find((view) => view.id === defId);
+				if (def) applyView(def);
+			}
+		});
 	});
 
 	function applyView(view: View) {
@@ -438,7 +458,18 @@
 		saveHidden();
 		saveFilters();
 		saveSortCriteria();
+		activeViewId = view.id;
 		showViewPanel = false;
+	}
+
+	function toggleDefaultView(viewId: string) {
+		if (defaultViewId === viewId) {
+			localStorage.removeItem(defaultViewKey);
+			defaultViewId = null;
+		} else {
+			localStorage.setItem(defaultViewKey, viewId);
+			defaultViewId = viewId;
+		}
 	}
 
 	async function handleSaveView() {
@@ -464,6 +495,11 @@
 	async function handleDeleteView(id: string) {
 		await deleteView(vault, folder, id);
 		views = views.filter((v) => v.id !== id);
+		if (activeViewId === id) activeViewId = null;
+		if (defaultViewId === id) {
+			localStorage.removeItem(defaultViewKey);
+			defaultViewId = null;
+		}
 	}
 
 	// --- Save handler with error feedback -----------------------------------
@@ -499,8 +535,16 @@
 		<button class="reset-btn" onclick={resetOrder}>Reset column order</button>
 	{/if}
 	<div class="view-panel-anchor">
-		<button class="view-btn" onclick={() => { showViewPanel = !showViewPanel; showSaveForm = false; }}>
-			Views{views.length > 0 ? ` (${views.length})` : ''}
+		<button
+			class="view-btn"
+			class:view-active={activeViewId !== null}
+			onclick={() => { showViewPanel = !showViewPanel; showSaveForm = false; }}
+		>
+			{#if activeViewId !== null}
+				{views.find((v) => v.id === activeViewId)?.name ?? 'View'}
+			{:else}
+				Views{views.length > 0 ? ` (${views.length})` : ''}
+			{/if}
 		</button>
 		{#if showViewPanel}
 			<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
@@ -510,7 +554,14 @@
 				{:else}
 					<ul class="view-list">
 						{#each views as view (view.id)}
-							<li class="view-row">
+							<li class="view-row" class:view-row-active={view.id === activeViewId}>
+								<button
+									class="view-default-btn"
+									class:view-default-set={defaultViewId === view.id}
+									onclick={() => toggleDefaultView(view.id)}
+									title={defaultViewId === view.id ? 'Remove default' : 'Set as default'}
+									aria-label={defaultViewId === view.id ? 'Remove default' : 'Set as default'}
+								>{defaultViewId === view.id ? '★' : '☆'}</button>
 								<button class="view-apply-btn" onclick={() => applyView(view)}>{view.name}</button>
 								<button class="view-delete-btn" onclick={() => handleDeleteView(view.id)} aria-label="Delete view">✕</button>
 							</li>
@@ -1030,6 +1081,11 @@
 		background: #f3f4f6;
 		color: #374151;
 	}
+	.view-btn.view-active {
+		border-color: #6366f1;
+		color: #6366f1;
+		background: #eef2ff;
+	}
 	.view-panel {
 		position: absolute;
 		right: 0;
@@ -1061,6 +1117,29 @@
 	}
 	.view-row:hover {
 		background: #f9fafb;
+	}
+	.view-row-active {
+		background: #eef2ff;
+	}
+	.view-row-active:hover {
+		background: #e0e7ff;
+	}
+	.view-default-btn {
+		background: none;
+		border: none;
+		cursor: pointer;
+		color: #d1d5db;
+		font-size: 0.85rem;
+		padding: 2px 2px;
+		border-radius: 4px;
+		line-height: 1;
+		flex-shrink: 0;
+	}
+	.view-default-btn:hover {
+		color: #f59e0b;
+	}
+	.view-default-btn.view-default-set {
+		color: #f59e0b;
 	}
 	.view-apply-btn {
 		flex: 1;
