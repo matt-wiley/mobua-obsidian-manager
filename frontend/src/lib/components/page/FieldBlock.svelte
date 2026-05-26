@@ -4,17 +4,20 @@
 	import DateField from '$lib/components/fields/DateField.svelte';
 	import UrlField from '$lib/components/fields/UrlField.svelte';
 	import RelationField from '$lib/components/fields/RelationField.svelte';
+	import EnumField from '$lib/components/fields/EnumField.svelte';
 
 	let {
 		record,
 		label,
 		fieldType,
+		options = [],
 		value,
 		onSave
 	}: {
 		record: VaultRecord;
 		label: string;
 		fieldType: string;
+		options?: string[];
 		value: string;
 		onSave: (v: string) => void;
 	} = $props();
@@ -29,6 +32,8 @@
 			<UrlField {value} {onSave} />
 		{:else if fieldType === 'relation'}
 			<RelationField {value} recordId={record.id} fieldName={label} {onSave} />
+		{:else if fieldType === 'enum'}
+			<EnumField {value} {options} {onSave} />
 		{:else}
 			<TextField {value} {onSave} />
 		{/if}

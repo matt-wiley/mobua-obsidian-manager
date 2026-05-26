@@ -8,8 +8,9 @@ export interface Folder {
 
 export interface SchemaField {
 	field_name: string;
-	field_type: 'text' | 'date' | 'url' | 'number' | 'relation' | 'markdown';
+	field_type: 'text' | 'date' | 'url' | 'number' | 'relation' | 'markdown' | 'enum';
 	source: 'frontmatter' | 'section';
+	options?: string[];
 }
 
 export interface View {

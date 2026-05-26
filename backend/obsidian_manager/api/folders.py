@@ -54,12 +54,16 @@ def folder_schema(vault_id: str, folder: str):
 
     schema = []
     for key in fm_keys:
-        sample = _sample_value(records, "frontmatter", key)
-        schema.append({
-            "field_name": key,
-            "field_type": infer_type(sample) if sample is not None else "text",
-            "source": "frontmatter",
-        })
+        values = _collect_field_values(records, "frontmatter", key)
+        sample = values[0] if values else None
+        field_type = infer_type(sample) if sample is not None else "text"
+        entry: dict = {"field_name": key, "field_type": field_type, "source": "frontmatter"}
+        if field_type == "text":
+            enum_opts = _detect_enum(values)
+            if enum_opts is not None:
+                entry["field_type"] = "enum"
+                entry["options"] = enum_opts
+        schema.append(entry)
     for key in section_keys:
         schema.append({
             "field_name": key,
@@ -148,10 +152,35 @@ def delete_view(vault_id: str, folder: str, view_id: str):
     queries.delete_view(conn, view_id)
 
 
-def _sample_value(records, column: str, key: str):
-    """Return the first non-null value for `key` across all records."""
+def _collect_field_values(records, column: str, key: str) -> list:
+    """Return all non-null values for `key` across all records."""
+    values = []
     for row in records:
         data = json.loads(row[column] or "{}")
-        if key in data and data[key] is not None:
-            return data[key]
-    return None
+        v = data.get(key)
+        if v is not None:
+            values.append(v)
+    return values
+
+
+_MAX_ENUM_DISTINCT = 10
+_MAX_ENUM_VALUE_LEN = 30
+
+
+def _detect_enum(values: list) -> list[str] | None:
+    """Return sorted distinct options if values look tag-like, else None.
+
+    Heuristics:
+    - At least 2 records have a non-empty string value
+    - At most 10 distinct values
+    - All values are ≤ 30 characters (short, tag-like)
+    """
+    str_values = [v for v in values if isinstance(v, str) and v.strip()]
+    if len(str_values) < 2:
+        return None
+    distinct = list(dict.fromkeys(str_values))
+    if len(distinct) > _MAX_ENUM_DISTINCT:
+        return None
+    if any(len(v) > _MAX_ENUM_VALUE_LEN for v in distinct):
+        return None
+    return sorted(distinct)

@@ -45,7 +45,8 @@
 		Object.keys(record.frontmatter).map((key) => ({
 			key,
 			value: record.frontmatter[key] != null ? String(record.frontmatter[key]) : '',
-			type: schemaMap[key]?.field_type ?? 'text'
+			type: schemaMap[key]?.field_type ?? 'text',
+			options: schemaMap[key]?.options ?? []
 		}))
 	);
 
@@ -114,6 +115,7 @@
 					{record}
 					label={fm.key}
 					fieldType={fm.type}
+					options={fm.options}
 					value={fm.value}
 					onSave={(v) => saveField(fm.key, v)}
 				/>

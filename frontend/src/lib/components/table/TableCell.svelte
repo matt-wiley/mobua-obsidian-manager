@@ -6,6 +6,7 @@
 	import UrlField from '$lib/components/fields/UrlField.svelte';
 	import RelationField from '$lib/components/fields/RelationField.svelte';
 	import MarkdownField from '$lib/components/fields/MarkdownField.svelte';
+	import EnumField from '$lib/components/fields/EnumField.svelte';
 
 	let {
 		record,
@@ -34,6 +35,8 @@
 	<RelationField {value} recordId={record.id} fieldName={field.field_name} {onSave} />
 {:else if field.field_type === 'markdown'}
 	<MarkdownField {value} {onSave} />
+{:else if field.field_type === 'enum'}
+	<EnumField {value} options={field.options ?? []} {onSave} />
 {:else}
 	<TextField {value} {onSave} />
 {/if}
