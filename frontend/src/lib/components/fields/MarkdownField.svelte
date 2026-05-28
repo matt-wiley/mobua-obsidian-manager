@@ -29,7 +29,15 @@
 
 	let editing = $state(false);
 	let editorEl = $state<HTMLDivElement>();
+	let fieldViewEl = $state<HTMLElement>();
 	let view: EditorView | null = null;
+
+	// Scroll the parent cell to bottom after view-mode content renders
+	$effect(() => {
+		if (!fieldViewEl || !value || editing) return;
+		const parent = fieldViewEl.parentElement;
+		if (parent) requestAnimationFrame(() => { parent.scrollTop = parent.scrollHeight; });
+	});
 
 	function startEdit() {
 		if (readonly) return;
@@ -62,7 +70,8 @@
 					markdown(),
 					EditorView.lineWrapping,
 					EditorView.theme({
-						'&': { minHeight: '120px', border: '1px solid #6366f1', borderRadius: '4px' },
+						'&': { minHeight: '120px', maxHeight: '380px', border: '1px solid #6366f1', borderRadius: '4px' },
+						'.cm-scroller': { overflow: 'auto' },
 						'.cm-content': { padding: '8px', fontFamily: 'inherit', fontSize: '14px' },
 						'.cm-focused': { outline: 'none' }
 					})
@@ -78,8 +87,9 @@
 		};
 		editorEl.addEventListener('focusout', handleBlur);
 
-		// Focus the editor
+		// Focus and scroll to bottom
 		view.focus();
+		view.dispatch({ effects: EditorView.scrollIntoView(view.state.doc.length) });
 
 		return () => {
 			editorEl?.removeEventListener('focusout', handleBlur);
@@ -99,6 +109,7 @@
 {:else}
 	<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
 	<div
+		bind:this={fieldViewEl}
 		role={readonly ? undefined : 'button'}
 		tabindex={readonly ? undefined : 0}
 		onclick={startEdit}

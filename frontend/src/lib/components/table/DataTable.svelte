@@ -812,7 +812,9 @@
 	}
 	.cell-inner {
 		min-width: 80px;
-		overflow: hidden;
+		overflow-x: hidden;
+		overflow-y: auto;
+		max-height: 400px;
 	}
 	tr:hover td {
 		background: #fafafa;
