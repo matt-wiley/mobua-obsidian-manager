@@ -804,20 +804,21 @@
 		box-shadow: inset -2px 0 0 #6366f1;
 	}
 	td {
-		padding: 4px 0;
-		border-bottom: 1px solid #f3f4f6;
+		padding: 10px 0;
+		border-bottom: 1px solid #e5e7eb;
 		vertical-align: top;
 		overflow: hidden;
 		max-width: 0; /* with table-layout:fixed this makes overflow:hidden clip inner content */
 	}
 	.cell-inner {
 		min-width: 80px;
+		padding: 0 10px;
 		overflow-x: hidden;
 		overflow-y: auto;
 		max-height: 400px;
 	}
 	tr:hover td {
-		background: #fafafa;
+		background: #f5f5f5;
 	}
 	.record-link {
 		display: block;
