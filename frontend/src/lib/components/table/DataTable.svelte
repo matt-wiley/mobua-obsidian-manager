@@ -779,15 +779,18 @@
 		font-size: 0.9rem;
 	}
 	thead {
-		background: #f9fafb;
-		border-bottom: 2px solid #e5e7eb;
+		background: #f3f4f6;
+		border-bottom: 2px solid #d1d5db;
 	}
 	th {
 		position: relative;
 		padding: 8px 12px;
 		text-align: left;
-		font-weight: 600;
-		color: #374151;
+		font-weight: 700;
+		font-size: 0.75rem;
+		letter-spacing: 0.05em;
+		text-transform: uppercase;
+		color: #111827;
 		white-space: nowrap;
 		overflow: hidden;
 		vertical-align: middle;

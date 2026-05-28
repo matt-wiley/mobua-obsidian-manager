@@ -85,13 +85,14 @@
 		right: 0;
 		top: 0;
 		height: 100%;
-		width: 4px;
+		width: 5px;
 		cursor: col-resize;
 		user-select: none;
 		touch-action: none;
+		background: linear-gradient(to right, transparent 2px, #d1d5db 2px, #d1d5db 3px, transparent 3px);
 	}
 	.resizer:hover,
 	.resizer.isResizing {
-		background: #6366f1;
+		background: linear-gradient(to right, transparent 1px, #6366f1 1px, #6366f1 4px, transparent 4px);
 	}
 </style>
