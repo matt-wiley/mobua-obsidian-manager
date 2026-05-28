@@ -526,6 +526,8 @@
 	}
 </script>
 
+<div class="datatable">
+
 {#if saveError}
 	<div class="save-error" role="alert">{saveError}</div>
 {/if}
@@ -768,9 +770,19 @@
 	</div>
 {/if}
 
+</div>
+
 <style>
+	.datatable {
+		display: flex;
+		flex-direction: column;
+		height: 100%;
+		min-height: 0;
+	}
 	.table-wrap {
-		overflow-x: auto;
+		flex: 1;
+		overflow: auto;
+		min-height: 0;
 	}
 	table {
 		border-collapse: collapse;
@@ -779,6 +791,9 @@
 		font-size: 0.9rem;
 	}
 	thead {
+		position: sticky;
+		top: 0;
+		z-index: 5;
 		background: #f3f4f6;
 		border-bottom: 2px solid #d1d5db;
 	}

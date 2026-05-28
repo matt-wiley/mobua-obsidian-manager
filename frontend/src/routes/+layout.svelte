@@ -140,7 +140,8 @@
 	.app-shell {
 		display: flex;
 		flex-direction: column;
-		min-height: 100vh;
+		height: 100vh;
+		overflow: hidden;
 		font-family: system-ui, sans-serif;
 	}
 	header {
@@ -215,6 +216,10 @@
 	main {
 		flex: 1;
 		padding: 20px;
+		overflow: hidden;
+		display: flex;
+		flex-direction: column;
+		min-height: 0;
 	}
 	footer {
 		display: flex;

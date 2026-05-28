@@ -64,22 +64,36 @@
 		<p class="create-error">{createError}</p>
 	{/if}
 
-	{#if !ready}
-		<p class="loading">Loading…</p>
-	{:else}
-		<DataTable
-			records={recordsStore.records}
-			schema={schemaStore.schema}
-			{vault}
-			{folder}
-			{colWidths}
-		/>
-	{/if}
+	<div class="table-container">
+		{#if !ready}
+			<p class="loading">Loading…</p>
+		{:else}
+			<DataTable
+				records={recordsStore.records}
+				schema={schemaStore.schema}
+				{vault}
+				{folder}
+				{colWidths}
+			/>
+		{/if}
+	</div>
 </div>
 
 <style>
 	.folder-page {
 		padding: 0;
+		flex: 1;
+		display: flex;
+		flex-direction: column;
+		min-height: 0;
+		overflow: hidden;
+	}
+	.table-container {
+		flex: 1;
+		display: flex;
+		flex-direction: column;
+		min-height: 0;
+		overflow: hidden;
 	}
 	.folder-header {
 		display: flex;

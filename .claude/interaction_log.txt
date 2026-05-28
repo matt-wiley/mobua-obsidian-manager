@@ -75,3 +75,4 @@
 2026-05-28 19:41 | Claude adjusted table styling with four improvements: increasing row padding from 4px to 10px, darkening borders from #f3f4f6 to #e5e7eb for visibility, adding 10px horizontal padding to cells, and enhancing hover contrast from #fafafa to #f5f5f5.
 2026-05-28 20:11 | Claude adjusted table header styling by darkening the background and text colors, increasing font weight, and adding uppercase styling with letter-spacing to create visual distinction from data rows.
 2026-05-28 20:13 | Claude modified the resizer component to have a 5px hit area with a centered 1px gray line that expands to 3px indigo on hover/drag for better visibility.
+2026-05-28 20:18 | Claude explained the CSS flexbox and overflow changes needed across three Svelte components to achieve a fixed header layout with only the table body scrolling.
