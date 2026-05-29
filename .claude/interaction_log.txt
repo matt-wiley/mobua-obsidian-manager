@@ -76,3 +76,6 @@
 2026-05-28 20:11 | Claude adjusted table header styling by darkening the background and text colors, increasing font weight, and adding uppercase styling with letter-spacing to create visual distinction from data rows.
 2026-05-28 20:13 | Claude modified the resizer component to have a 5px hit area with a centered 1px gray line that expands to 3px indigo on hover/drag for better visibility.
 2026-05-28 20:18 | Claude explained the CSS flexbox and overflow changes needed across three Svelte components to achieve a fixed header layout with only the table body scrolling.
+2026-05-29 01:01 | Claude explained that a scroll event handler toggles the `scrolled-top` class based on whether `scrollTop > 0`, which triggers an inset box-shadow CSS rule to display a downward shadow at the cell's top edge when content is scrolled out of view.
+2026-05-29 01:12 | Claude identified that Svelte's CSS dead-code elimination was stripping the `scrolled-top` class rule because it was only toggled via JavaScript, and provided a fix by switching to direct inline `boxShadow` style assignment in the scroll handler instead.
+2026-05-29 01:15 | Claude confirmed that the Playwright browser's stale connection issue was resolved and verified the CSS shadow-fade implementation is working correctly with a dark gradient overlay that fades in on scroll.

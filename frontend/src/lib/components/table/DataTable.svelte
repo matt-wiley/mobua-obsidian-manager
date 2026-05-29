@@ -744,7 +744,7 @@
 						{#each visibleCols as col (col.id)}
 							<td style="width: {colW(col.id, col.defaultW)}px">
 								{#if col.isFilename}
-									<div class="cell-inner">
+									<div class="cell-inner" onscroll={(e) => { const el = e.currentTarget as HTMLElement; el.style.setProperty('--shadow-opacity', el.scrollTop > 0 ? '1' : '0'); }}>
 										<a href="/{encodeURIComponent(vault)}/{encodeURIComponent(folder)}/{encodeURIComponent(record.filename)}" class="record-link">
 											{record.filename}
 										</a>
@@ -752,7 +752,7 @@
 								{:else}
 									{@const field = fieldMap[col.id]}
 									{#if field}
-										<div class="cell-inner">
+										<div class="cell-inner" onscroll={(e) => { const el = e.currentTarget as HTMLElement; el.style.setProperty('--shadow-opacity', el.scrollTop > 0 ? '1' : '0'); }}>
 											<TableCell
 												{record}
 												{field}
@@ -834,6 +834,20 @@
 		overflow-x: hidden;
 		overflow-y: auto;
 		max-height: 400px;
+		--shadow-opacity: 0;
+	}
+	.cell-inner::before {
+		content: '';
+		display: block;
+		position: sticky;
+		top: 0;
+		height: 24px;
+		margin: 0 -10px -24px;
+		background: linear-gradient(to bottom, rgba(0, 0, 0, 0.18), transparent);
+		pointer-events: none;
+		z-index: 1;
+		opacity: var(--shadow-opacity);
+		transition: opacity 0.15s ease;
 	}
 	tr:hover td {
 		background: #f5f5f5;
