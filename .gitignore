@@ -23,3 +23,5 @@ frontend/build/
 backend/obsidian_manager/static/*
 !backend/obsidian_manager/static/.gitkeep
 backend/dist/
+
+.playwright-mcp/
