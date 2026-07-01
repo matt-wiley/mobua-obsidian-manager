@@ -1,10 +1,16 @@
-.PHONY: build dev clean
+.PHONY: build docker dev clean
 
 build:
 	cd frontend && npm run build
 	rm -rf backend/obsidian_manager/static/*
-	cp -r frontend/.svelte-kit/output/client/* backend/obsidian_manager/static/
+	cp -r frontend/build/* backend/obsidian_manager/static/
 	cd backend && uv build
+
+docker: build
+	docker build \
+		-t obsidian-manager:$(shell git describe --tags --dirty) \
+		-t obsidian-manager:latest \
+		.
 
 dev:
 	@echo "Start both processes:"
