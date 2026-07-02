@@ -54,6 +54,22 @@
 	const detailsEntry = $derived(sectionEntries.find(([title]) => title === 'Details'));
 	const otherSectionEntries = $derived(sectionEntries.filter(([title]) => title !== 'Details'));
 
+	// --- Layout mode -----------------------------------------------------------
+
+	type LayoutMode = 'single' | 'two-centered' | 'two-full';
+	const LAYOUT_STORAGE_KEY = 'pageview-layout-mode';
+	const storedLayoutMode = localStorage.getItem(LAYOUT_STORAGE_KEY);
+	let layoutMode = $state<LayoutMode>(
+		storedLayoutMode === 'single' || storedLayoutMode === 'two-centered' || storedLayoutMode === 'two-full'
+			? storedLayoutMode
+			: 'two-centered'
+	);
+
+	function setLayoutMode(mode: LayoutMode) {
+		layoutMode = mode;
+		localStorage.setItem(LAYOUT_STORAGE_KEY, mode);
+	}
+
 	// --- Save with error handling --------------------------------------------
 
 	let saveError = $state<string | null>(null);
@@ -86,7 +102,7 @@
 	}
 </script>
 
-<div class="page-view">
+<div class="page-view mode-{layoutMode}">
 	<div class="page-col">
 		{#if saveError}
 			<div class="save-error" role="alert">{saveError}</div>
@@ -108,6 +124,24 @@
 				<!-- svelte-ignore a11y_click_events_have_key_events a11y_no_noninteractive_element_interactions -->
 				<h1 class="title" onclick={startTitleEdit}>{record.filename}</h1>
 			{/if}
+
+			<div class="layout-toggle" role="group" aria-label="Page layout">
+				<button
+					class:active={layoutMode === 'single'}
+					onclick={() => setLayoutMode('single')}
+					title="Single column"
+				>1 col</button>
+				<button
+					class:active={layoutMode === 'two-centered'}
+					onclick={() => setLayoutMode('two-centered')}
+					title="Two columns, centered"
+				>2 col</button>
+				<button
+					class:active={layoutMode === 'two-full'}
+					onclick={() => setLayoutMode('two-full')}
+					title="Two columns, full width"
+				>2 col wide</button>
+			</div>
 		</div>
 
 		<div class="body">
@@ -182,8 +216,43 @@
 		flex-shrink: 0;
 	}
 	.title-row {
+		display: flex;
+		align-items: flex-start;
+		justify-content: space-between;
+		gap: 12px;
 		margin-bottom: 20px;
 		flex-shrink: 0;
+	}
+	.layout-toggle {
+		display: flex;
+		flex-shrink: 0;
+		border: 1px solid #e5e7eb;
+		border-radius: 6px;
+		overflow: hidden;
+		margin-top: 4px;
+	}
+	.layout-toggle button {
+		background: #fff;
+		border: none;
+		border-left: 1px solid #e5e7eb;
+		color: #6b7280;
+		font-size: 0.75rem;
+		font-family: inherit;
+		padding: 4px 8px;
+		cursor: pointer;
+		white-space: nowrap;
+	}
+	.layout-toggle button:first-child {
+		border-left: none;
+	}
+	.layout-toggle button:hover {
+		background: #f3f4f6;
+		color: #111;
+	}
+	.layout-toggle button.active {
+		background: #eef2ff;
+		color: #4f46e5;
+		font-weight: 600;
 	}
 	.body {
 		flex: 1;
@@ -196,17 +265,23 @@
 	}
 
 	@container page-view (min-width: 760px) {
-		.page-col {
+		.mode-two-centered .page-col {
 			max-width: 1200px;
 		}
-		.body {
+		.mode-two-full .page-col {
+			max-width: none;
+		}
+		.mode-two-centered .body,
+		.mode-two-full .body {
 			display: grid;
 			grid-template-columns: minmax(280px, 360px) 1fr;
 			gap: 0 40px;
 			overflow: hidden;
 		}
-		.col-left,
-		.col-right {
+		.mode-two-centered .col-left,
+		.mode-two-centered .col-right,
+		.mode-two-full .col-left,
+		.mode-two-full .col-right {
 			height: 100%;
 			overflow-y: auto;
 			padding-right: 4px;
@@ -226,6 +301,8 @@
 		background: #f3f4f6;
 	}
 	.title-input {
+		flex: 1;
+		min-width: 0;
 		width: 100%;
 		font-size: 1.8rem;
 		font-weight: 700;
