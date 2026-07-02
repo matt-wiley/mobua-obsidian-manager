@@ -120,3 +120,4 @@
 2026-07-02 16:30 | Claude reviewed recent commits showing UI work on a two-column page view component with resizable columns, layout toggling, and Docker support, then offered to continue work on the PageView.svelte file.
 2026-07-02 16:48 | Claude identified and fixed layout shift issues across three Svelte components by aligning box models, padding, and borders between view and edit states.
 2026-07-02 16:48 | Claude diagnosed and fixed jarring size jumps in three field components (`MarkdownField`, `TextField`, `UrlField`, `SectionBlock`) by unifying box models, padding, borders, and line heights between read and edit states.
+2026-07-02 16:50 | Claude committed and pushed the layout shift fixes (commit `b2313aa`) to `main`, deliberately excluding an unrelated `backend/uv.lock` version-field diff.

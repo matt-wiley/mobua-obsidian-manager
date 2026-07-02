@@ -27,14 +27,24 @@
 		onSave: (v: string) => void;
 	} = $props();
 
+	const MIN_EDIT_HEIGHT = 60;
+	const MAX_EDIT_HEIGHT = 380;
+
 	let editing = $state(false);
 	let editorEl = $state<HTMLDivElement>();
 	let fieldViewEl = $state<HTMLElement>();
 	let view: EditorView | null = null;
 
-	// Scroll the parent cell to bottom after view-mode content renders
+	// The read view is the source of truth for height; the editor conforms to
+	// whatever the rendered markdown last measured, so switching modes doesn't
+	// visibly resize the field.
+	let measuredHeight = $state<number | null>(null);
+
 	$effect(() => {
-		if (!fieldViewEl || !value || editing) return;
+		if (!fieldViewEl || editing) return;
+		measuredHeight = fieldViewEl.offsetHeight;
+
+		if (!value) return;
 		const parent = fieldViewEl.parentElement;
 		if (parent) requestAnimationFrame(() => { parent.scrollTop = parent.scrollHeight; });
 	});
@@ -55,6 +65,11 @@
 	$effect(() => {
 		if (!editing || !editorEl) return;
 
+		const editHeight = Math.min(
+			Math.max(measuredHeight ?? MIN_EDIT_HEIGHT, MIN_EDIT_HEIGHT),
+			MAX_EDIT_HEIGHT
+		);
+
 		view = new EditorView({
 			state: EditorState.create({
 				doc: value ?? '',
@@ -70,7 +85,7 @@
 					markdown(),
 					EditorView.lineWrapping,
 					EditorView.theme({
-						'&': { maxHeight: '380px', border: '1px solid #6366f1', borderRadius: '4px', boxSizing: 'border-box' },
+						'&': { height: `${editHeight}px`, border: '1px solid #6366f1', borderRadius: '4px', boxSizing: 'border-box' },
 						'.cm-scroller': { overflow: 'auto' },
 						'.cm-content': { padding: '4px', fontFamily: 'inherit', fontSize: '14px', lineHeight: '1.6' },
 						'.cm-focused': { outline: 'none' }
