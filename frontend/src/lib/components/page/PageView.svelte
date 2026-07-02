@@ -51,6 +51,8 @@
 	);
 
 	const sectionEntries = $derived(Object.entries(record.sections));
+	const detailsEntry = $derived(sectionEntries.find(([title]) => title === 'Details'));
+	const otherSectionEntries = $derived(sectionEntries.filter(([title]) => title !== 'Details'));
 
 	// --- Save with error handling --------------------------------------------
 
@@ -85,58 +87,89 @@
 </script>
 
 <div class="page-view">
-	{#if saveError}
-		<div class="save-error" role="alert">{saveError}</div>
-	{/if}
-
-	<!-- Title -->
-	<div class="title-row">
-		{#if editingTitle}
-			<!-- svelte-ignore a11y_autofocus -->
-			<input
-				class="title-input"
-				type="text"
-				autofocus
-				bind:value={titleDraft}
-				onblur={commitTitle}
-				onkeydown={onTitleKeydown}
-			/>
-		{:else}
-			<!-- svelte-ignore a11y_click_events_have_key_events a11y_no_noninteractive_element_interactions -->
-			<h1 class="title" onclick={startTitleEdit}>{record.filename}</h1>
+	<div class="page-col">
+		{#if saveError}
+			<div class="save-error" role="alert">{saveError}</div>
 		{/if}
-	</div>
 
-	<!-- Frontmatter properties -->
-	{#if fmEntries.length > 0}
-		<div class="properties">
-			{#each fmEntries as fm (fm.key)}
-				<FieldBlock
-					{record}
-					label={fm.key}
-					fieldType={fm.type}
-					options={fm.options}
-					value={fm.value}
-					onSave={(v) => saveField(fm.key, v)}
+		<!-- Title -->
+		<div class="title-row">
+			{#if editingTitle}
+				<!-- svelte-ignore a11y_autofocus -->
+				<input
+					class="title-input"
+					type="text"
+					autofocus
+					bind:value={titleDraft}
+					onblur={commitTitle}
+					onkeydown={onTitleKeydown}
 				/>
-			{/each}
+			{:else}
+				<!-- svelte-ignore a11y_click_events_have_key_events a11y_no_noninteractive_element_interactions -->
+				<h1 class="title" onclick={startTitleEdit}>{record.filename}</h1>
+			{/if}
 		</div>
-	{/if}
 
-	<!-- H2 sections -->
-	{#each sectionEntries as [title, content] (title)}
-		<SectionBlock
-			{title}
-			{content}
-			onSaveContent={(v) => saveSection(title, v)}
-			onSaveTitle={(newTitle) => renameSectionTitle(title, newTitle)}
-		/>
-	{/each}
+		<div class="body">
+			<div class="col-left">
+				<!-- Frontmatter properties -->
+				{#if fmEntries.length > 0}
+					<div class="properties">
+						{#each fmEntries as fm (fm.key)}
+							<FieldBlock
+								{record}
+								label={fm.key}
+								fieldType={fm.type}
+								options={fm.options}
+								value={fm.value}
+								onSave={(v) => saveField(fm.key, v)}
+							/>
+						{/each}
+					</div>
+				{/if}
+
+				{#if detailsEntry}
+					{@const [title, content] = detailsEntry}
+					<SectionBlock
+						{title}
+						{content}
+						onSaveContent={(v) => saveSection(title, v)}
+						onSaveTitle={(newTitle) => renameSectionTitle(title, newTitle)}
+					/>
+				{/if}
+			</div>
+
+			<div class="col-right">
+				{#each otherSectionEntries as [title, content] (title)}
+					<SectionBlock
+						{title}
+						{content}
+						onSaveContent={(v) => saveSection(title, v)}
+						onSaveTitle={(newTitle) => renameSectionTitle(title, newTitle)}
+					/>
+				{/each}
+			</div>
+		</div>
+	</div>
 </div>
 
 <style>
 	.page-view {
+		container-type: inline-size;
+		container-name: page-view;
+		height: 100%;
+		display: flex;
+		flex-direction: column;
+		min-height: 0;
+	}
+	.page-col {
+		width: 100%;
 		max-width: 760px;
+		margin: 0 auto;
+		height: 100%;
+		display: flex;
+		flex-direction: column;
+		min-height: 0;
 	}
 	.save-error {
 		background: #fee2e2;
@@ -146,9 +179,38 @@
 		padding: 8px 12px;
 		font-size: 0.875rem;
 		margin-bottom: 12px;
+		flex-shrink: 0;
 	}
 	.title-row {
 		margin-bottom: 20px;
+		flex-shrink: 0;
+	}
+	.body {
+		flex: 1;
+		min-height: 0;
+		overflow-y: auto;
+	}
+	.col-left,
+	.col-right {
+		min-width: 0;
+	}
+
+	@container page-view (min-width: 760px) {
+		.page-col {
+			max-width: 1200px;
+		}
+		.body {
+			display: grid;
+			grid-template-columns: minmax(280px, 360px) 1fr;
+			gap: 0 40px;
+			overflow: hidden;
+		}
+		.col-left,
+		.col-right {
+			height: 100%;
+			overflow-y: auto;
+			padding-right: 4px;
+		}
 	}
 	.title {
 		margin: 0;

@@ -102,3 +102,8 @@
 2026-07-01 14:35 | Claude explained that the `v0.1.0-dirty` Docker image tags are correct because the user is exactly on the v0.1.0 tag with uncommitted changes, and a git commit hash will only appear after committing those changes.
 2026-07-01 14:51 | Claude informed the user that a commit agent is executing asynchronously and will provide updates upon completion.
 2026-07-01 14:51 | Claude acknowledged that a background commit agent is running and will provide an update upon completion.
+2026-07-01 14:52 | Claude reported that the commit was pushed successfully and asked whether to also push the `v0.1.0` git tag to the remote repository.
+2026-07-02 15:04 | Claude summarized recent commits across Docker containerization, table view UI polish (headers, scrolling, column resizing, markdown fields), table functionality (view indicators, enum dropdowns, saved filters/sorts), and prior work on backend cleanup and multi-vault support, offering to elaborate on any area.
+2026-07-02 15:04 | Claude summarized recent development work on a table view UI with Docker containerization, table polish and functionality improvements across multiple commits, and offered to elaborate on any specific areas.
+2026-07-02 15:45 | Claude refactored the record page view (`PageView.svelte`) to use container queries for responsive layout, creating a single-column design below 760px width and a two-column grid layout above that threshold with independently scrollable sections.
+2026-07-02 15:45 | Claude refactored `PageView.svelte` to use CSS container queries for responsive layout, enabling a two-column grid design above 760px width and single-column stacking below, with independently scrollable sections.

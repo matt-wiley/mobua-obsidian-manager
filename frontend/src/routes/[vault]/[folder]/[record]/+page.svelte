@@ -55,18 +55,29 @@
 		</button>
 	</nav>
 
-	{#if recordsStore.loading}
-		<p class="loading">Loading…</p>
-	{:else if record}
-		<PageView {record} schema={schemaStore.schema} />
-	{:else}
-		<p class="not-found">Record "{filename}" not found in {folder}.</p>
-	{/if}
+	<div class="page-body">
+		{#if recordsStore.loading}
+			<p class="loading">Loading…</p>
+		{:else if record}
+			<PageView {record} schema={schemaStore.schema} />
+		{:else}
+			<p class="not-found">Record "{filename}" not found in {folder}.</p>
+		{/if}
+	</div>
 </div>
 
 <style>
 	.page-container {
-		max-width: 800px;
+		flex: 1;
+		display: flex;
+		flex-direction: column;
+		min-height: 0;
+		overflow: hidden;
+	}
+	.page-body {
+		flex: 1;
+		min-height: 0;
+		overflow: hidden;
 	}
 	.breadcrumb {
 		display: flex;
