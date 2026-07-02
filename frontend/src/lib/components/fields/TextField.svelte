@@ -54,6 +54,7 @@
 <style>
 	.field-input {
 		width: 100%;
+		box-sizing: border-box;
 		border: 1px solid #6366f1;
 		border-radius: 4px;
 		padding: 2px 6px;
@@ -62,8 +63,10 @@
 	}
 	.field-view {
 		display: block;
+		box-sizing: border-box;
 		min-height: 1.2em;
-		padding: 2px 4px;
+		border: 1px solid transparent;
+		padding: 2px 6px;
 		border-radius: 4px;
 		white-space: pre-wrap;
 		word-break: break-word;

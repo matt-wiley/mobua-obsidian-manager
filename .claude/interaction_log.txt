@@ -115,3 +115,8 @@
 2026-07-02 16:11 | Claude committed and pushed the three-way layout toggle feature (commit `0818028`) to `origin/main`.
 2026-07-02 16:21 | Claude implemented a horizontally resizable left column in two-column modes with snap-to points (25%, 33.33%, 50%) and localStorage persistence, verified the feature works correctly across navigation, and awaited confirmation to commit.
 2026-07-02 16:21 | Claude implemented a horizontally resizable left column with snap-to-grid positioning (25%, 33.33%, 50%), free-form dragging between 20-60%, and localStorage persistence, and verified the feature works correctly across navigation and reloads.
+2026-07-02 16:23 | Claude committed and pushed the horizontally resizable left column feature (commit `8c99584`) to `origin/main`.
+2026-07-02 16:30 | Claude summarized recent work focusing on `PageView.svelte` improvements including a resizable left column with snap points, a three-way layout toggle, responsive two-column design, and Docker containerization, then offered to continue development on the component.
+2026-07-02 16:30 | Claude reviewed recent commits showing UI work on a two-column page view component with resizable columns, layout toggling, and Docker support, then offered to continue work on the PageView.svelte file.
+2026-07-02 16:48 | Claude identified and fixed layout shift issues across three Svelte components by aligning box models, padding, and borders between view and edit states.
+2026-07-02 16:48 | Claude diagnosed and fixed jarring size jumps in three field components (`MarkdownField`, `TextField`, `UrlField`, `SectionBlock`) by unifying box models, padding, borders, and line heights between read and edit states.

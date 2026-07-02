@@ -63,8 +63,10 @@
 		font-weight: 600;
 		color: #374151;
 		cursor: pointer;
+		border: 1px solid transparent;
 		border-radius: 4px;
-		padding: 2px 4px;
+		padding: 2px 6px;
+		box-sizing: border-box;
 	}
 	.section-title:hover {
 		background: #f3f4f6;

@@ -70,9 +70,9 @@
 					markdown(),
 					EditorView.lineWrapping,
 					EditorView.theme({
-						'&': { minHeight: '120px', maxHeight: '380px', border: '1px solid #6366f1', borderRadius: '4px' },
+						'&': { maxHeight: '380px', border: '1px solid #6366f1', borderRadius: '4px', boxSizing: 'border-box' },
 						'.cm-scroller': { overflow: 'auto' },
-						'.cm-content': { padding: '8px', fontFamily: 'inherit', fontSize: '14px' },
+						'.cm-content': { padding: '4px', fontFamily: 'inherit', fontSize: '14px', lineHeight: '1.6' },
 						'.cm-focused': { outline: 'none' }
 					})
 				]
@@ -138,8 +138,10 @@
 		text-align: right;
 	}
 	.field-view {
+		border: 1px solid transparent;
 		border-radius: 4px;
 		padding: 4px;
+		box-sizing: border-box;
 	}
 	.editable:hover {
 		background: #f9fafb;

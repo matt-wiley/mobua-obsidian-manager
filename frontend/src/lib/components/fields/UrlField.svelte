@@ -67,6 +67,7 @@
 <style>
 	.field-input {
 		width: 100%;
+		box-sizing: border-box;
 		border: 1px solid #6366f1;
 		border-radius: 4px;
 		padding: 2px 6px;
@@ -75,7 +76,9 @@
 	}
 	.field-view {
 		display: block;
-		padding: 2px 4px;
+		box-sizing: border-box;
+		border: 1px solid transparent;
+		padding: 2px 6px;
 		border-radius: 4px;
 		overflow: hidden;
 		text-overflow: ellipsis;
