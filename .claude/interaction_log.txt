@@ -125,3 +125,10 @@
 2026-07-02 16:59 | Claude pushed commit `c67e110` documenting the field-sizing fix that had already been committed as `a209fa3` in the previous interaction.
 2026-07-02 17:13 | Claude asked the user for confirmation before committing and pushing code changes.
 2026-07-02 17:13 | Claude asked the user for confirmation to commit and push the layout shift fixes for markdown field sizing.
+2026-07-02 17:14 | Claude pushed the confirmed layout shift fixes for markdown field sizing as commit `279f942` to `main`.
+2026-07-02 17:45 | Claude removed the hard upper clamp on markdown editor height so it dynamically matches the read view's measured height for all content sizes, eliminating the ~200px shrink on large content, and is ready to commit the fix.
+2026-07-02 17:45 | Claude identified and fixed a height-clamping bug where the editor was hard-limited to 380px while the read view expanded to 598px, causing a jarring resize on click, by removing the upper constraint so the editor dynamically matches the read view's measured height.
+2026-07-02 17:49 | Claude reduced the CodeMirror editor's font-size from 14px to 12.6px in `MarkdownField.svelte` and verified the change live in the browser, awaiting user confirmation to commit and push.
+2026-07-02 17:49 | Reduced CodeMirror editor font-size by 10% (from 14px to 12.6px) in MarkdownField.svelte and verified the change in the browser.
+2026-07-02 18:02 | Claude verified both backend and frontend servers are running and the API is working end-to-end with real vault data, though couldn't capture a browser screenshot due to a locked Playwright profile.
+2026-07-02 18:02 | Claude verified both backend and frontend servers are running and fully functional (backend API returns real vault data, frontend proxies requests correctly), accessible at `http://localhost:5173`, but couldn't capture a browser screenshot due to a locked Playwright profile.

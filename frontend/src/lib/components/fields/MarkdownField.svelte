@@ -28,7 +28,6 @@
 	} = $props();
 
 	const MIN_EDIT_HEIGHT = 60;
-	const MAX_EDIT_HEIGHT = 380;
 
 	let editing = $state(false);
 	let editorEl = $state<HTMLDivElement>();
@@ -77,10 +76,7 @@
 	$effect(() => {
 		if (!editing || !editorEl) return;
 
-		const editHeight = Math.min(
-			Math.max(measuredHeight ?? MIN_EDIT_HEIGHT, MIN_EDIT_HEIGHT),
-			MAX_EDIT_HEIGHT
-		);
+		const editHeight = Math.max(measuredHeight ?? MIN_EDIT_HEIGHT, MIN_EDIT_HEIGHT);
 
 		view = new EditorView({
 			state: EditorState.create({
@@ -99,7 +95,7 @@
 					EditorView.theme({
 						'&': { height: `${editHeight}px`, border: '1px solid #6366f1', borderRadius: '4px', boxSizing: 'border-box' },
 						'.cm-scroller': { overflow: 'auto' },
-						'.cm-content': { padding: '4px', fontFamily: 'inherit', fontSize: '14px', lineHeight: '1.6' },
+						'.cm-content': { padding: '4px', fontFamily: 'inherit', fontSize: '11.5px', lineHeight: '1.6' },
 						'.cm-focused': { outline: 'none' }
 					})
 				]
