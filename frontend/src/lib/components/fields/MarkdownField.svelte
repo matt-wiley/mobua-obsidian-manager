@@ -37,16 +37,28 @@
 
 	// The read view is the source of truth for height; the editor conforms to
 	// whatever the rendered markdown last measured, so switching modes doesn't
-	// visibly resize the field.
+	// visibly resize the field. A ResizeObserver (not just value/editing
+	// changes) is required because layout reflows — window resize, dragging
+	// the column splitter, the 1/2-col layout toggle — don't touch any
+	// reactive state the effect would otherwise re-run on.
 	let measuredHeight = $state<number | null>(null);
 
 	$effect(() => {
 		if (!fieldViewEl || editing) return;
-		measuredHeight = fieldViewEl.offsetHeight;
+		const el = fieldViewEl;
 
-		if (!value) return;
-		const parent = fieldViewEl.parentElement;
-		if (parent) requestAnimationFrame(() => { parent.scrollTop = parent.scrollHeight; });
+		const measure = () => { measuredHeight = el.offsetHeight; };
+		measure();
+
+		const observer = new ResizeObserver(measure);
+		observer.observe(el);
+
+		if (value) {
+			const parent = el.parentElement;
+			if (parent) requestAnimationFrame(() => { parent.scrollTop = parent.scrollHeight; });
+		}
+
+		return () => observer.disconnect();
 	});
 
 	function startEdit() {

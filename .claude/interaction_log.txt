@@ -122,3 +122,6 @@
 2026-07-02 16:48 | Claude diagnosed and fixed jarring size jumps in three field components (`MarkdownField`, `TextField`, `UrlField`, `SectionBlock`) by unifying box models, padding, borders, and line heights between read and edit states.
 2026-07-02 16:50 | Claude committed and pushed the layout shift fixes (commit `b2313aa`) to `main`, deliberately excluding an unrelated `backend/uv.lock` version-field diff.
 2026-07-02 16:58 | Claude fixed layout shift issues in markdown fields by measuring the read view's rendered height and forcing the CodeMirror editor to match it exactly (clamped 60–380px), eliminating the jarring size jumps between view and edit modes, and committed the fix as `a209fa3`.
+2026-07-02 16:59 | Claude pushed commit `c67e110` documenting the field-sizing fix that had already been committed as `a209fa3` in the previous interaction.
+2026-07-02 17:13 | Claude asked the user for confirmation before committing and pushing code changes.
+2026-07-02 17:13 | Claude asked the user for confirmation to commit and push the layout shift fixes for markdown field sizing.
