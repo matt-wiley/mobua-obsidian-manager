@@ -70,6 +70,50 @@
 		localStorage.setItem(LAYOUT_STORAGE_KEY, mode);
 	}
 
+	// --- Left column width (resizable, with snap points) ------------------------
+
+	const WIDTH_STORAGE_KEY = 'pageview-left-col-width';
+	const MIN_WIDTH_PCT = 20;
+	const MAX_WIDTH_PCT = 60;
+	const DEFAULT_WIDTH_PCT = 32;
+	const SNAP_POINTS = [25, 33.33, 50];
+	const SNAP_THRESHOLD_PCT = 1.5;
+
+	const storedWidthPct = Number(localStorage.getItem(WIDTH_STORAGE_KEY));
+	let leftWidthPct = $state(
+		Number.isFinite(storedWidthPct) && storedWidthPct >= MIN_WIDTH_PCT && storedWidthPct <= MAX_WIDTH_PCT
+			? storedWidthPct
+			: DEFAULT_WIDTH_PCT
+	);
+
+	let bodyEl = $state<HTMLDivElement | undefined>(undefined);
+	let resizing = $state(false);
+
+	function onResizerPointerDown(e: PointerEvent) {
+		resizing = true;
+		(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+	}
+
+	function onResizerPointerMove(e: PointerEvent) {
+		if (!resizing || !bodyEl) return;
+		const rect = bodyEl.getBoundingClientRect();
+		let pct = ((e.clientX - rect.left) / rect.width) * 100;
+		pct = Math.min(MAX_WIDTH_PCT, Math.max(MIN_WIDTH_PCT, pct));
+		for (const snap of SNAP_POINTS) {
+			if (Math.abs(pct - snap) < SNAP_THRESHOLD_PCT) {
+				pct = snap;
+				break;
+			}
+		}
+		leftWidthPct = pct;
+	}
+
+	function onResizerPointerUp() {
+		if (!resizing) return;
+		resizing = false;
+		localStorage.setItem(WIDTH_STORAGE_KEY, String(leftWidthPct));
+	}
+
 	// --- Save with error handling --------------------------------------------
 
 	let saveError = $state<string | null>(null);
@@ -144,7 +188,12 @@
 			</div>
 		</div>
 
-		<div class="body">
+		<div
+			class="body"
+			class:resizing
+			bind:this={bodyEl}
+			style={layoutMode !== 'single' ? `grid-template-columns: ${leftWidthPct}% 8px 1fr` : undefined}
+		>
 			<div class="col-left">
 				<!-- Frontmatter properties -->
 				{#if fmEntries.length > 0}
@@ -172,6 +221,19 @@
 					/>
 				{/if}
 			</div>
+
+			{#if layoutMode !== 'single'}
+				<!-- svelte-ignore a11y_no_static_element_interactions -->
+				<div
+					class="col-resizer"
+					role="separator"
+					aria-orientation="vertical"
+					aria-label="Resize columns"
+					onpointerdown={onResizerPointerDown}
+					onpointermove={onResizerPointerMove}
+					onpointerup={onResizerPointerUp}
+				></div>
+			{/if}
 
 			<div class="col-right">
 				{#each otherSectionEntries as [title, content] (title)}
@@ -263,6 +325,9 @@
 	.col-right {
 		min-width: 0;
 	}
+	.col-resizer {
+		display: none;
+	}
 
 	@container page-view (min-width: 760px) {
 		.mode-two-centered .page-col {
@@ -275,7 +340,6 @@
 		.mode-two-full .body {
 			display: grid;
 			grid-template-columns: minmax(280px, 360px) 1fr;
-			gap: 0 40px;
 			overflow: hidden;
 		}
 		.mode-two-centered .col-left,
@@ -284,7 +348,39 @@
 		.mode-two-full .col-right {
 			height: 100%;
 			overflow-y: auto;
-			padding-right: 4px;
+		}
+		.mode-two-centered .col-left,
+		.mode-two-full .col-left {
+			padding-right: 12px;
+		}
+		.mode-two-centered .col-right,
+		.mode-two-full .col-right {
+			padding-left: 12px;
+		}
+		.mode-two-centered .col-resizer,
+		.mode-two-full .col-resizer {
+			display: flex;
+			justify-content: center;
+			height: 100%;
+			cursor: col-resize;
+			touch-action: none;
+		}
+		.mode-two-centered .col-resizer::after,
+		.mode-two-full .col-resizer::after {
+			content: '';
+			width: 1px;
+			height: 100%;
+			background: #e5e7eb;
+			transition: background 0.15s, width 0.15s;
+		}
+		.mode-two-centered .col-resizer:hover::after,
+		.mode-two-full .col-resizer:hover::after,
+		.body.resizing .col-resizer::after {
+			width: 3px;
+			background: #6366f1;
+		}
+		.body.resizing {
+			user-select: none;
 		}
 	}
 	.title {

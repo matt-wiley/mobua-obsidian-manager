@@ -112,3 +112,6 @@
 2026-07-02 15:54 | Claude pushed code changes to the `origin/main` branch.
 2026-07-02 16:11 | Claude implemented a persistent three-way layout toggle ("1 col", "2 col", "2 col wide") with localStorage backing and verified it works across navigation without errors.
 2026-07-02 16:11 | Claude added a three-way layout toggle ("1 col", "2 col", "2 col wide") to the page view title with localStorage persistence and verified all modes render correctly and persist across navigation.
+2026-07-02 16:11 | Claude committed and pushed the three-way layout toggle feature (commit `0818028`) to `origin/main`.
+2026-07-02 16:21 | Claude implemented a horizontally resizable left column in two-column modes with snap-to points (25%, 33.33%, 50%) and localStorage persistence, verified the feature works correctly across navigation, and awaited confirmation to commit.
+2026-07-02 16:21 | Claude implemented a horizontally resizable left column with snap-to-grid positioning (25%, 33.33%, 50%), free-form dragging between 20-60%, and localStorage persistence, and verified the feature works correctly across navigation and reloads.
