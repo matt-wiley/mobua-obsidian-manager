@@ -11,6 +11,7 @@
 
 	const vault = get(page).params.vault as string;
 	const folder = get(page).params.folder as string;
+	let quickSearch = $state('');
 	let colWidths = $state<Record<string, number>>({});
 	let ready = $state(false);
 	let creating = $state(false);
@@ -55,6 +56,21 @@
 <div class="folder-page">
 	<div class="folder-header">
 		<h2 class="folder-title">{folder}</h2>
+		<div class="search-wrap">
+			<input
+				class="search-input"
+				type="text"
+				placeholder="Search…"
+				bind:value={quickSearch}
+			/>
+			{#if quickSearch}
+				<button
+					class="search-clear"
+					aria-label="Clear search"
+					onclick={() => (quickSearch = '')}
+				>×</button>
+			{/if}
+		</div>
 		<button class="new-btn" onclick={handleCreate} disabled={creating}>
 			{creating ? 'Creating…' : '+ New record'}
 		</button>
@@ -74,6 +90,7 @@
 				{vault}
 				{folder}
 				{colWidths}
+				{quickSearch}
 			/>
 		{/if}
 	</div>
@@ -106,6 +123,40 @@
 		font-size: 1.4rem;
 		font-weight: 700;
 		color: #111;
+	}
+	.search-wrap {
+		position: relative;
+		flex: 1;
+		max-width: 360px;
+		margin: 0 16px;
+	}
+	.search-input {
+		width: 100%;
+		box-sizing: border-box;
+		padding: 6px 28px 6px 10px;
+		font-size: 0.875rem;
+		border: 1px solid #d1d5db;
+		border-radius: 6px;
+		outline: none;
+	}
+	.search-input:focus {
+		border-color: #6366f1;
+	}
+	.search-clear {
+		position: absolute;
+		right: 6px;
+		top: 50%;
+		transform: translateY(-50%);
+		border: none;
+		background: none;
+		color: #9ca3af;
+		font-size: 1rem;
+		line-height: 1;
+		cursor: pointer;
+		padding: 2px 4px;
+	}
+	.search-clear:hover {
+		color: #374151;
 	}
 	.new-btn {
 		background: #6366f1;

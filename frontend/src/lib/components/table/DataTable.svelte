@@ -11,13 +11,15 @@
 		schema,
 		vault,
 		folder,
-		colWidths = {}
+		colWidths = {},
+		quickSearch = ''
 	}: {
 		records: VaultRecord[];
 		schema: SchemaField[];
 		vault: string;
 		folder: string;
 		colWidths?: Record<string, number>;
+		quickSearch?: string;
 	} = $props();
 
 	// --- Column sizing -------------------------------------------------------
@@ -360,10 +362,18 @@
 		return true;
 	}
 
+	function matchesQuickSearch(record: VaultRecord, query: string): boolean {
+		const q = query.trim().toLowerCase();
+		if (!q) return true;
+		return ['filename', ...Object.keys(fieldMap)].some((field) =>
+			getFilterRaw(record, field).toLowerCase().includes(q)
+		);
+	}
+
 	const filteredRecords = $derived(
-		filters.length === 0
-			? records
-			: records.filter((r) => filters.every((f) => matchesCriterion(r, f)))
+		records.filter(
+			(r) => filters.every((f) => matchesCriterion(r, f)) && matchesQuickSearch(r, quickSearch)
+		)
 	);
 
 	// --- Multi-field sort (persisted in localStorage) ------------------------
