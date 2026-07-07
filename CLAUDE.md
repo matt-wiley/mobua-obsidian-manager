@@ -6,6 +6,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 A "Notion Lite" web UI backed by an Obsidian vault. Markdown files are the **only** source of truth. SQLite is a rebuild-able index, never the primary data store. The full spec is in `docs/implementation-plan.md`.
 
+## Project Wiki
+
+A Claude-native knowledge base lives at `docs/llm-wiki/`. It captures what the code cannot: *why* decisions were made, recurring patterns, domain concepts, and non-obvious gotchas. Written dense, for fast low-token reading.
+
+- **Read `docs/llm-wiki/INDEX.md` first** — it's the routing map (project summary, concept clusters, cross-references, file ↔ concept bindings). Follow `[[slug]]` links to specific pages as the task needs; don't scan the whole wiki.
+- **Before writing to the wiki, read `docs/llm-wiki/meta/schema.md`** — the living taxonomy (content types `decision`/`pattern`/`concept`/`component`, page templates, conventions).
+- **Maintain it** via the `/mobua:project-wiki` skill: update after significant work (new module, architectural decision, correction) and file durable session signals (corrections, confirmed conventions) back into pages. Log each pass in `meta/history/`.
+- **Conventions:** kebab-case slug filenames · `_updated: DATE | relates: [[slug]]_` under each title · `relates:` frontmatter and inline `[[slug]]` links mirror exactly · keep pages ≤100 lines · never document what the code already says plainly.
+
 ## Development Commands
 
 **Backend (Python 3.12+, `uv` for package management, run from `backend/`):**
