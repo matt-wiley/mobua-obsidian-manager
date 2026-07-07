@@ -22,7 +22,14 @@ from ._helpers import folder_db_path, require_vault, row_to_dict
 from ..db import queries
 from ..db.connection import get_connection
 from ..sync.indexer import index_file
-from ..sync.writer import write_record
+from ..sync.writer import (
+    delete_section,
+    retitle_h1,
+    split_document,
+    upsert_section,
+    write_document,
+    write_record,
+)
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -34,10 +41,24 @@ class RecordCreate(BaseModel):
     sections: dict = {}
 
 
+class SectionEdit(BaseModel):
+    heading: str
+    body: str = ""
+    previous_heading: str | None = None  # set when renaming a section
+
+
 class RecordUpdate(BaseModel):
+    """A record edit expressed as an *intent*, not a whole-record replacement.
+
+    Body edits are surgical: ``section`` upserts (or renames) exactly one H2
+    section; ``delete_section`` removes one. The rest of the file is left
+    byte-for-byte untouched, so content the index doesn't model is never lost.
+    """
+
     filename: str | None = None
     frontmatter: dict | None = None
-    sections: dict | None = None
+    section: SectionEdit | None = None
+    delete_section: str | None = None
 
 
 # ---------------------------------------------------------------------------
@@ -102,19 +123,33 @@ def update_record(vault_id: str, record_id: str, body: RecordUpdate):
         raise HTTPException(status_code=404, detail="Record not found")
 
     current = row_to_dict(row)
-    new_filename = body.filename if body.filename is not None else current["filename"]
-    new_frontmatter = body.frontmatter if body.frontmatter is not None else current["frontmatter"]
-    new_sections = body.sections if body.sections is not None else current["sections"]
-
     old_path = Path(current["file_path"])
+
+    # Read the live file — the single source of truth. Never rebuild the body
+    # from the index, or content the index doesn't model would be lost.
+    if old_path.exists():
+        cur_frontmatter, doc_body = split_document(old_path.read_text(encoding="utf-8"))
+    else:
+        cur_frontmatter, doc_body = current["frontmatter"], _fallback_body(current)
+
+    new_frontmatter = body.frontmatter if body.frontmatter is not None else cur_frontmatter
+
+    if body.section is not None:
+        doc_body = upsert_section(
+            doc_body,
+            body.section.heading,
+            body.section.body,
+            body.section.previous_heading,
+        )
+    if body.delete_section is not None:
+        doc_body = delete_section(doc_body, body.delete_section)
+
+    new_filename = body.filename if body.filename is not None else current["filename"]
+    if new_filename != current["filename"]:
+        doc_body = retitle_h1(doc_body, current["filename"], new_filename)
     new_path = old_path.parent / f"{new_filename}.md"
 
-    write_record(
-        file_path=new_path,
-        filename=new_filename,
-        frontmatter=new_frontmatter,
-        sections=new_sections,
-    )
+    write_document(file_path=new_path, frontmatter=new_frontmatter, body=doc_body)
 
     if old_path != new_path:
         os.remove(old_path)
@@ -155,6 +190,23 @@ def delete_record(vault_id: str, record_id: str):
 
     events.broadcast({"type": "record_deleted", "folder_path": folder_path, "record_id": record_id, "vault_id": vault_id})
     logger.info("deleted record %s", record_id)
+
+
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+
+def _fallback_body(current: dict) -> str:
+    """Reconstruct a body from the index when the .md file is missing on disk.
+
+    Only reached if the file was deleted out from under us mid-edit; normal
+    updates read the live file. Best-effort — rebuilds the H1 and known
+    sections from the index.
+    """
+    parts = [f"\n# [[{current['filename']}]]"]
+    for heading, section_body in current["sections"].items():
+        parts.append(f"\n## {heading}\n\n{section_body}")
+    return "\n".join(parts) + "\n"
 
 
 # ---------------------------------------------------------------------------

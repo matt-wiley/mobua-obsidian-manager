@@ -1,5 +1,5 @@
 # Project Wiki Index
-_updated: 2026-07-07_
+_updated: 2026-07-07 (pass 02)_
 
 ## Project in One Paragraph
 mobua-obsidian-manager is a "Notion Lite" web UI over an Obsidian vault. `.md` files are the **only** source of truth ([[markdown-source-of-truth]]); SQLite is a rebuildable index. Stack: FastAPI backend → SQLite (WAL) → SvelteKit frontend. Writes go UI → `writer.py` (atomic `.md` write) → `watcher.py` → `parser.py` + `indexer.py` → SQLite → SSE → Svelte store → re-render, targeting <500ms from save to UI. The schema is emergent ([[emergent-schema]]): folder = table, file = record, frontmatter keys + H2 headings = fields.
@@ -10,6 +10,7 @@ mobua-obsidian-manager is a "Notion Lite" web UI over an Obsidian vault. `.md` f
 ## Decisions
 - [[markdown-source-of-truth]] — `.md` is canonical; SQLite is rebuildable.
 - [[atomic-md-writes]] — tmp + `os.replace`; never write in place.
+- [[live-file-surgical-writes]] — updates read the live file + splice; never regenerate from the index.
 
 ## Patterns
 - [[all-sql-in-queries]] — all backend SQL in `db/queries.py`.
@@ -34,7 +35,7 @@ mobua-obsidian-manager is a "Notion Lite" web UI over an Obsidian vault. `.md` f
 - [[sse-event-flow]] — `/events` push chain + heartbeat.
 
 ## Concept Clusters
-- **write path**: [[markdown-source-of-truth]], [[atomic-md-writes]], [[writer]], [[atomic-write-delete-debounce]]
+- **write path**: [[markdown-source-of-truth]], [[atomic-md-writes]], [[live-file-surgical-writes]], [[writer]], [[atomic-write-delete-debounce]]
 - **sync / read path**: [[watcher]], [[indexer]], [[sse-event-flow]], [[sync-badge-states]]
 - **schema & fields**: [[emergent-schema]], [[frontmatter-type-inference]], [[one-component-per-field-type]], [[relation-field-resolution]]
 - **identity**: [[stable-uuid-and-hash-skip]], [[parser]]
@@ -43,13 +44,15 @@ mobua-obsidian-manager is a "Notion Lite" web UI over an Obsidian vault. `.md` f
 ## Cross-References
 - [[atomic-md-writes]] → [[atomic-write-delete-debounce]]: the atomic swap fires delete+create, which the watcher must debounce.
 - [[markdown-source-of-truth]] → [[stable-uuid-and-hash-skip]]: rebuildable DB forces path-derived ids, not autoincrement.
+- [[markdown-source-of-truth]] → [[live-file-surgical-writes]]: "index is rebuildable" means writes must trust the file, not the index — regenerating from the index caused field-edit data loss.
 - [[frontmatter-type-inference]] → [[emergent-schema]]: inferred types are what make a query-time schema possible.
 - [[watcher]] → [[sse-event-flow]] → [[sync-badge-states]]: change events flow to the UI; heartbeats keep the badge green.
 
 ## File ↔ Concept Bindings
 - `backend/obsidian_manager/sync/parser.py` → [[parser]], [[frontmatter-type-inference]]
 - `backend/obsidian_manager/sync/indexer.py` → [[indexer]], [[stable-uuid-and-hash-skip]]
-- `backend/obsidian_manager/sync/writer.py` → [[writer]], [[atomic-md-writes]]
+- `backend/obsidian_manager/sync/writer.py` → [[writer]], [[atomic-md-writes]], [[live-file-surgical-writes]]
+- `backend/obsidian_manager/api/records.py` → [[live-file-surgical-writes]]
 - `backend/obsidian_manager/sync/watcher.py` → [[watcher]], [[atomic-write-delete-debounce]]
 - `backend/obsidian_manager/api/events.py` → [[sse-event-flow]]
 - `backend/obsidian_manager/db/queries.py` → [[all-sql-in-queries]], [[emergent-schema]]

@@ -524,7 +524,7 @@
 		if (field.source === 'frontmatter') {
 			patch = { frontmatter: { ...record.frontmatter, [colId]: value } };
 		} else {
-			patch = { sections: { ...record.sections, [colId]: value } };
+			patch = { section: { heading: colId, body: value } };
 		}
 		try {
 			await recordsStore.update(record.id, patch);

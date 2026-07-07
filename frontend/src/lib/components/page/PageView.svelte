@@ -134,15 +134,17 @@
 	}
 
 	async function saveSection(sectionTitle: string, value: string) {
-		await save({ sections: { ...record.sections, [sectionTitle]: value } });
+		await save({ section: { heading: sectionTitle, body: value } });
 	}
 
 	async function renameSectionTitle(oldTitle: string, newTitle: string) {
-		const newSections: Record<string, string> = {};
-		for (const [k, v] of Object.entries(record.sections)) {
-			newSections[k === oldTitle ? newTitle : k] = v as string;
-		}
-		await save({ sections: newSections });
+		await save({
+			section: {
+				heading: newTitle,
+				body: record.sections[oldTitle] ?? '',
+				previous_heading: oldTitle
+			}
+		});
 	}
 </script>
 

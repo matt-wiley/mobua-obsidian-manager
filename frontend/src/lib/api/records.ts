@@ -17,10 +17,20 @@ export interface RecordCreate {
 	sections?: Record<string, string>;
 }
 
+export interface SectionEdit {
+	heading: string;
+	body: string;
+	/** Set when renaming: the section's current heading. */
+	previous_heading?: string;
+}
+
 export interface RecordUpdate {
 	filename?: string;
 	frontmatter?: Record<string, unknown>;
-	sections?: Record<string, string>;
+	/** Upsert (or rename) exactly one H2 section. */
+	section?: SectionEdit;
+	/** Remove one H2 section by heading. */
+	delete_section?: string;
 }
 
 export interface RelationOption {
