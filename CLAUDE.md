@@ -10,7 +10,7 @@ A "Notion Lite" web UI backed by an Obsidian vault. Markdown files are the **onl
 
 **Backend (Python 3.12+, `uv` for package management, run from `backend/`):**
 ```bash
-uv run uvicorn main:app --reload            # Dev server (port 8000)
+uv run uvicorn obsidian_manager.main:app --reload   # Dev server (port 8000)
 uv run pytest                               # Run all tests
 uv run pytest tests/test_parser.py          # Run single test file
 uv add <package>                            # Add a dependency
@@ -35,7 +35,9 @@ Three-layer stack: FastAPI backend → SQLite index → SvelteKit frontend.
 **Write:** SvelteKit → `PUT /records/{id}` → FastAPI → `writer.py` writes `.md` atomically → `watcher.py` detects change → `parser.py` + `indexer.py` update SQLite → SSE event → Svelte store → UI re-renders  
 **Target latency:** < 500ms from Obsidian save to UI update
 
-### Backend (`backend/`)
+### Backend (`backend/obsidian_manager/`)
+
+Paths below are relative to the package root `backend/obsidian_manager/` (imports are relative, e.g. `from ..db import queries`).
 
 - `db/queries.py` — **all SQL lives here**. No raw SQL elsewhere.
 - `db/connection.py` — single SQLite connection, WAL mode.
