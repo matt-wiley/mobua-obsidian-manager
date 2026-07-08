@@ -11,6 +11,7 @@ mobua-obsidian-manager is a "Notion Lite" web UI over an Obsidian vault. `.md` f
 - [[markdown-source-of-truth]] — `.md` is canonical; SQLite is rebuildable.
 - [[atomic-md-writes]] — tmp + `os.replace`; never write in place.
 - [[live-file-surgical-writes]] — updates read the live file + splice; never regenerate from the index.
+- [[git-tag-versioning]] — one app version from git tags; bump via `make release`.
 
 ## Patterns
 - [[all-sql-in-queries]] — all backend SQL in `db/queries.py`.
@@ -33,6 +34,7 @@ mobua-obsidian-manager is a "Notion Lite" web UI over an Obsidian vault. `.md` f
 - [[writer]] — record → rendered `.md`, atomic.
 - [[watcher]] — watchdog → indexer → SSE; delete-debounce + guardian.
 - [[sse-event-flow]] — `/events` push chain + heartbeat.
+- [[build-info-endpoint]] — `/api/meta` + About badge; live-git-favoring version resolution.
 
 ## Concept Clusters
 - **write path**: [[markdown-source-of-truth]], [[atomic-md-writes]], [[live-file-surgical-writes]], [[writer]], [[atomic-write-delete-debounce]]
@@ -40,6 +42,7 @@ mobua-obsidian-manager is a "Notion Lite" web UI over an Obsidian vault. `.md` f
 - **schema & fields**: [[emergent-schema]], [[frontmatter-type-inference]], [[one-component-per-field-type]], [[relation-field-resolution]]
 - **identity**: [[stable-uuid-and-hash-skip]], [[parser]]
 - **layering conventions**: [[all-sql-in-queries]], [[all-fetch-in-lib-api]]
+- **versioning / build info**: [[git-tag-versioning]], [[build-info-endpoint]]
 
 ## Cross-References
 - [[atomic-md-writes]] → [[atomic-write-delete-debounce]]: the atomic swap fires delete+create, which the watcher must debounce.
@@ -47,6 +50,7 @@ mobua-obsidian-manager is a "Notion Lite" web UI over an Obsidian vault. `.md` f
 - [[markdown-source-of-truth]] → [[live-file-surgical-writes]]: "index is rebuildable" means writes must trust the file, not the index — regenerating from the index caused field-edit data loss.
 - [[frontmatter-type-inference]] → [[emergent-schema]]: inferred types are what make a query-time schema possible.
 - [[watcher]] → [[sse-event-flow]] → [[sync-badge-states]]: change events flow to the UI; heartbeats keep the badge green.
+- [[git-tag-versioning]] → [[build-info-endpoint]]: the tag is the source; `/api/meta` resolves and exposes it, favoring live git over stale install metadata.
 
 ## File ↔ Concept Bindings
 - `backend/obsidian_manager/sync/parser.py` → [[parser]], [[frontmatter-type-inference]]
@@ -59,6 +63,8 @@ mobua-obsidian-manager is a "Notion Lite" web UI over an Obsidian vault. `.md` f
 - `frontend/src/lib/api/` → [[all-fetch-in-lib-api]]
 - `frontend/src/lib/components/fields/` → [[one-component-per-field-type]], [[relation-field-resolution]]
 - `frontend/src/lib/components/shared/SyncBadge.svelte` → [[sync-badge-states]]
+- `backend/obsidian_manager/_buildinfo.py`, `backend/obsidian_manager/api/meta.py` → [[build-info-endpoint]], [[git-tag-versioning]]
+- `frontend/src/lib/components/shared/BuildBadge.svelte`, `frontend/src/lib/api/meta.ts` → [[build-info-endpoint]]
 
 ## Known Gaps
 - Frontend stores (`records`, `schema`, `drawer`) not yet documented as their own pages.

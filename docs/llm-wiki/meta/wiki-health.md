@@ -1,10 +1,10 @@
 # Wiki Health
-_updated: 2026-07-07 (pass 02)_
+_updated: 2026-07-08 (pass 03)_
 
 wiki_path: ./docs/llm-wiki/
 
 ## Current Status
-Healthy (pass 02, 2026-07-07). 19 pages across 4 types (3 decision, 5 pattern, 6 concept, 5 component). All pages ≤100 lines. INDEX reachable to every page in ≤2 hops. `relates:`↔inline mirrors verified consistent.
+Healthy (pass 03, 2026-07-08). 21 pages across 4 types (4 decision, 5 pattern, 6 concept, 6 component). All pages ≤100 lines. INDEX reachable to every page in ≤2 hops. `relates:`↔inline mirrors verified consistent. Pass 03 added versioning/build-info coverage ([[git-tag-versioning]], [[build-info-endpoint]]).
 
 ## Known Gaps
 - Frontend stores (`records`, `schema`, `drawer`, `sync`) not documented as pages.
