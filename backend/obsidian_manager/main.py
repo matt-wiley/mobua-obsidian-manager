@@ -11,6 +11,7 @@ from .api import events
 from .api.config import load_persisted_vaults, router as config_router, save_vault_registry
 from .api.events import router as events_router
 from .api.folders import router as folders_router
+from .api.meta import router as meta_router
 from .api.records import router as records_router
 from .api.sync import router as sync_router
 from . import vault
@@ -53,6 +54,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 app.include_router(config_router, prefix="/api")
+app.include_router(meta_router, prefix="/api")
 app.include_router(events_router, prefix="/api")
 app.include_router(folders_router, prefix="/api/vaults/{vault_id}")
 app.include_router(records_router, prefix="/api/vaults/{vault_id}")
