@@ -1,5 +1,5 @@
 # Frontmatter type inference
-_updated: 2026-07-07 | relates: [[emergent-schema]], [[one-component-per-field-type]], [[relation-field-resolution]]_
+_updated: 2026-07-13 | relates: [[emergent-schema]], [[one-component-per-field-type]], [[relation-field-resolution]], [[canonical-field-options]]_
 
 **Rule:** A frontmatter value's field type is inferred, never declared. `parser.infer_type(value)` decides, and **order matters** — first match wins:
 
@@ -12,4 +12,4 @@ _updated: 2026-07-07 | relates: [[emergent-schema]], [[one-component-per-field-t
 
 **Where:** `backend/obsidian_manager/sync/parser.py` (`infer_type`, `_DATE_RE`, `_WIKILINK_RE`). Frontend field routing consumes the result — see [[one-component-per-field-type]].
 
-**Why:** This is what makes the [[emergent-schema]] possible — no `ALTER TABLE`, no field registry. Because the date regex runs before the numeric check, a bare `2026-07-07` is a `date`, not three numbers. `relation` (step 4) is a specialization of text detected by wikilink syntax; see [[relation-field-resolution]] for how the target is then resolved.
+**Why:** This is what makes the [[emergent-schema]] possible — no `ALTER TABLE`, no field registry. Because the date regex runs before the numeric check, a bare `2026-07-07` is a `date`, not three numbers. `relation` (step 4) is a specialization of text detected by wikilink syntax; see [[relation-field-resolution]] for how the target is then resolved. An explicit [[canonical-field-options]] list overrides this inference for a field, forcing it to `enum`.

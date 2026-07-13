@@ -3,8 +3,10 @@
 	import type { SchemaField, View } from '$lib/api/folders';
 	import { setColWidth, getViews, createView, deleteView } from '$lib/api/folders';
 	import { recordsStore } from '$lib/stores/records.svelte';
+	import { schemaStore } from '$lib/stores/schema.svelte';
 	import TableCell from './TableCell.svelte';
 	import ColumnHeader from './ColumnHeader.svelte';
+	import FieldOptionsEditor from './FieldOptionsEditor.svelte';
 
 	let {
 		records,
@@ -174,6 +176,14 @@
 	}
 
 	const fieldMap = $derived(Object.fromEntries(schema.map((f) => [f.field_name, f])));
+
+	// --- Field options editor ------------------------------------------------
+
+	let editingField = $state<string | null>(null);
+
+	function canEditOptions(colId: string): boolean {
+		return fieldMap[colId]?.source === 'frontmatter';
+	}
 
 	// --- Column visibility (persisted in localStorage) ----------------------
 
@@ -743,6 +753,7 @@
 								sortDir={sortIdx !== -1 ? sortCriteria[sortIdx].dir : null}
 								sortPriority={sortCriteria.length > 1 ? sortIdx + 1 : null}
 								onSortClick={() => handleSortClick(col.id)}
+								onEditOptions={canEditOptions(col.id) ? () => (editingField = col.id) : undefined}
 							/>
 						</th>
 					{/each}
@@ -778,6 +789,17 @@
 			</tbody>
 		</table>
 	</div>
+{/if}
+
+{#if editingField}
+	<FieldOptionsEditor
+		{vault}
+		{folder}
+		field={editingField}
+		initialOptions={fieldMap[editingField]?.options ?? []}
+		onClose={() => (editingField = null)}
+		onSaved={() => schemaStore.reload()}
+	/>
 {/if}
 
 </div>

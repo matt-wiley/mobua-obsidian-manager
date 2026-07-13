@@ -30,6 +30,31 @@ export function getFolderSchema(vaultId: string, folder: string): Promise<Schema
 	return apiFetch(`/vaults/${encodeURIComponent(vaultId)}/folders/${encodeURIComponent(folder)}/schema`);
 }
 
+export function getFieldOptions(vaultId: string, folder: string): Promise<Record<string, string[]>> {
+	return apiFetch(
+		`/vaults/${encodeURIComponent(vaultId)}/folders/${encodeURIComponent(folder)}/field-options`
+	);
+}
+
+export function setFieldOptions(
+	vaultId: string,
+	folder: string,
+	field: string,
+	options: string[]
+): Promise<void> {
+	return apiFetch(
+		`/vaults/${encodeURIComponent(vaultId)}/folders/${encodeURIComponent(folder)}/field-options/${encodeURIComponent(field)}`,
+		{ method: 'PUT', body: JSON.stringify({ options }) }
+	);
+}
+
+export function deleteFieldOptions(vaultId: string, folder: string, field: string): Promise<void> {
+	return apiFetch(
+		`/vaults/${encodeURIComponent(vaultId)}/folders/${encodeURIComponent(folder)}/field-options/${encodeURIComponent(field)}`,
+		{ method: 'DELETE' }
+	);
+}
+
 export function getColWidths(vaultId: string, folder: string): Promise<Record<string, number>> {
 	return apiFetch(`/vaults/${encodeURIComponent(vaultId)}/folders/${encodeURIComponent(folder)}/col_widths`);
 }

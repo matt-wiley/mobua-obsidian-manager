@@ -6,7 +6,8 @@
 		onResizeStart,
 		sortDir = null,
 		sortPriority = null,
-		onSortClick
+		onSortClick,
+		onEditOptions
 	}: {
 		label: string;
 		canResize?: boolean;
@@ -15,10 +16,19 @@
 		sortDir?: 'asc' | 'desc' | null;
 		sortPriority?: number | null;
 		onSortClick?: () => void;
+		onEditOptions?: () => void;
 	} = $props();
 </script>
 
 <span class="label">{label}</span>
+{#if onEditOptions}
+	<button
+		class="opts-btn"
+		onclick={(e) => { e.stopPropagation(); onEditOptions!(); }}
+		title="Edit options"
+		aria-label="Edit options"
+	>⋯</button>
+{/if}
 {#if onSortClick}
 	<button
 		class="sort-btn"
@@ -60,6 +70,27 @@
 		margin-left: 2px;
 		line-height: 1;
 		opacity: 0;
+	}
+	.opts-btn {
+		flex-shrink: 0;
+		background: none;
+		border: 1px solid transparent;
+		border-radius: 3px;
+		cursor: pointer;
+		font-size: 12px;
+		color: #9ca3af;
+		padding: 0 4px;
+		margin-left: 2px;
+		line-height: 1;
+		opacity: 0;
+	}
+	:global(th:hover) .opts-btn {
+		opacity: 1;
+	}
+	.opts-btn:hover {
+		border-color: #d1d5db;
+		background: #f3f4f6;
+		color: #374151;
 	}
 	:global(th:hover) .sort-btn,
 	.sort-btn.active {

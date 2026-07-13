@@ -14,5 +14,11 @@ export const schemaStore = {
 		_currentVaultId = vaultId;
 		_currentFolder = folder;
 		_schema = await getFolderSchema(vaultId, folder);
+	},
+
+	async reload() {
+		if (_currentVaultId && _currentFolder) {
+			_schema = await getFolderSchema(_currentVaultId, _currentFolder);
+		}
 	}
 };

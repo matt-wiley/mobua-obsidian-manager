@@ -2,6 +2,9 @@
 
 GET /folders                            → list of folders with record counts
 GET /folders/{folder}/schema            → union of all field names + inferred types
+GET    /folders/{folder}/field-options          → canonical option lists {field: [...]}
+PUT    /folders/{folder}/field-options/{field}  → set a field's canonical options
+DELETE /folders/{folder}/field-options/{field}  → clear a field's canonical options
 GET /folders/{folder}/col_widths        → saved column widths for the folder
 PUT /folders/{folder}/col_widths/{field}→ save a column width
 GET /folders/{folder}/views             → saved views for the folder
@@ -18,6 +21,8 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
 from ._helpers import folder_db_path, require_vault
+from .. import schema_config
+from .. import vault as _vault
 from ..db import queries
 from ..db.connection import get_connection
 from ..sync.parser import infer_type
@@ -52,13 +57,23 @@ def folder_schema(vault_id: str, folder: str):
     fm_keys = queries.get_folder_frontmatter_keys(conn, fp)
     section_keys = queries.get_folder_section_keys(conn, fp)
 
+    vault_path = _vault.get_vault_path(vault_id)
+    canonical = schema_config.get_folder_field_options(vault_path, folder)
+
     schema = []
     for key in fm_keys:
         values = _collect_field_values(records, "frontmatter", key)
         sample = values[0] if values else None
         field_type = infer_type(sample) if sample is not None else "text"
         entry: dict = {"field_name": key, "field_type": field_type, "source": "frontmatter"}
-        if field_type == "text":
+        if key in canonical:
+            # Explicit config wins: promote to enum and keep canonical order,
+            # appending any in-use values not in the list so nothing is unselectable.
+            fixed = canonical[key]
+            seen = [str(v) for v in values if isinstance(v, str) and v.strip()]
+            entry["field_type"] = "enum"
+            entry["options"] = fixed + [v for v in dict.fromkeys(seen) if v not in fixed]
+        elif field_type == "text":
             enum_opts = _detect_enum(values)
             if enum_opts is not None:
                 entry["field_type"] = "enum"
@@ -72,6 +87,29 @@ def folder_schema(vault_id: str, folder: str):
         })
 
     return schema
+
+
+@router.get("/folders/{folder}/field-options", dependencies=[Depends(require_vault)])
+def get_field_options(vault_id: str, folder: str):
+    """Return the explicitly-configured canonical options: {field: [options...]}."""
+    vault_path = _vault.get_vault_path(vault_id)
+    return schema_config.get_folder_field_options(vault_path, folder)
+
+
+class FieldOptionsBody(BaseModel):
+    options: list[str]
+
+
+@router.put("/folders/{folder}/field-options/{field}", status_code=204, dependencies=[Depends(require_vault)])
+def set_field_options(vault_id: str, folder: str, field: str, body: FieldOptionsBody):
+    vault_path = _vault.get_vault_path(vault_id)
+    schema_config.set_field_options(vault_path, folder, field, body.options)
+
+
+@router.delete("/folders/{folder}/field-options/{field}", status_code=204, dependencies=[Depends(require_vault)])
+def delete_field_options(vault_id: str, folder: str, field: str):
+    vault_path = _vault.get_vault_path(vault_id)
+    schema_config.delete_field_options(vault_path, folder, field)
 
 
 class ColWidthBody(BaseModel):
