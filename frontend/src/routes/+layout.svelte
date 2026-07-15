@@ -6,6 +6,7 @@
 	import Drawer from '$lib/components/drawer/Drawer.svelte';
 	import { syncStore } from '$lib/stores/sync.svelte';
 	import { recordsStore } from '$lib/stores/records.svelte';
+	import { drawerStore } from '$lib/stores/drawer.svelte';
 	import { apiFetch } from '$lib/api/client';
 	import { getConfig, type VaultInfo } from '$lib/api/config';
 	import { goto } from '$app/navigation';
@@ -143,11 +144,11 @@
 			</div>
 		{/if}
 
-		<a
-			href="/settings"
+		<button
 			class="settings-link"
-			class:active={$page.url.pathname === '/settings'}
-		>Settings</a>
+			class:active={drawerStore.open && drawerStore.mode === 'settings'}
+			onclick={() => drawerStore.open && drawerStore.mode === 'settings' ? drawerStore.close() : drawerStore.openSettings()}
+		>Settings</button>
 		<SyncBadge />
 	</header>
 
@@ -281,10 +282,13 @@
 	.settings-link {
 		font-size: 0.8rem;
 		color: #6b7280;
-		text-decoration: none;
+		background: none;
+		border: none;
+		cursor: pointer;
 		padding: 4px 8px;
 		border-radius: 4px;
 		white-space: nowrap;
+		font-family: inherit;
 		transition: color 0.12s, background 0.12s;
 	}
 	.settings-link:hover {

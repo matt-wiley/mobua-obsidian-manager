@@ -1,22 +1,35 @@
 import type { VaultRecord } from '$lib/api/records';
 
+type DrawerMode = 'record' | 'settings';
+
 let _open = $state(false);
+let _mode = $state<DrawerMode>('record');
 let _record = $state<VaultRecord | null>(null);
 let _breadcrumbs = $state<VaultRecord[]>([]);
 
 export const drawerStore = {
 	get open() { return _open; },
+	get mode() { return _mode; },
 	get record() { return _record; },
 	get breadcrumbs() { return _breadcrumbs; },
 
 	push(record: VaultRecord) {
 		if (_record) _breadcrumbs = [..._breadcrumbs, _record];
 		_record = record;
+		_mode = 'record';
 		_open = true;
 	},
 
 	replace(record: VaultRecord) {
 		_record = record;
+		_mode = 'record';
+		_open = true;
+	},
+
+	openSettings() {
+		_record = null;
+		_breadcrumbs = [];
+		_mode = 'settings';
 		_open = true;
 	},
 

@@ -193,3 +193,4 @@
 2026-07-15 18:48 | Claude committed the documentation updates as `f005946` and asked the user whether to push the commit or if any tweaks were needed first.
 2026-07-15 18:52 | Claude created a new commit (`896193c`) and asked the user whether to push both pending commits (`f005946` + `896193c`) to the repository.
 2026-07-15 19:45 | Claude pushed three commits enabling a code highlighting theme selector with nine themes available in Settings, persisted across reloads, and applied globally to all markdown views (`ada5e72`).
+2026-07-15 23:36 | Claude fixed CSS specificity issues in the code highlighting component (`b39cc5c`) by narrowing scoped selectors to exclude `.hljs` elements and removing hardcoded backgrounds from `pre` and `pre code.hljs`, allowing the dynamically-loaded theme styles to properly apply.

@@ -5,6 +5,7 @@
 	import type { SchemaField } from '$lib/api/folders';
 	import PageView from '$lib/components/page/PageView.svelte';
 	import Breadcrumb from './Breadcrumb.svelte';
+	import SettingsPanel from './SettingsPanel.svelte';
 
 	// Load schema when the drawer's record folder changes
 	let drawerSchema = $state<SchemaField[]>([]);
@@ -44,19 +45,25 @@
 	class="drawer"
 	class:open={drawerStore.open}
 	aria-hidden={!drawerStore.open}
-	aria-label="Record drawer"
+	aria-label={drawerStore.mode === 'settings' ? 'Settings drawer' : 'Record drawer'}
 >
-	{#if liveRecord}
-		<div class="drawer-header">
+	<div class="drawer-header">
+		{#if drawerStore.mode === 'settings'}
+			<span class="drawer-title">Settings</span>
+		{:else}
 			<Breadcrumb />
-			<button class="close-btn" onclick={() => drawerStore.close()} aria-label="Close drawer">
-				✕
-			</button>
-		</div>
-		<div class="drawer-body">
+		{/if}
+		<button class="close-btn" onclick={() => drawerStore.close()} aria-label="Close drawer">
+			✕
+		</button>
+	</div>
+	<div class="drawer-body">
+		{#if drawerStore.mode === 'settings'}
+			<SettingsPanel />
+		{:else if liveRecord}
 			<PageView record={liveRecord} schema={drawerSchema} />
-		</div>
-	{/if}
+		{/if}
+	</div>
 </div>
 
 <style>
@@ -95,6 +102,11 @@
 		min-height: 48px;
 		gap: 8px;
 		flex-shrink: 0;
+	}
+	.drawer-title {
+		font-size: 0.9rem;
+		font-weight: 600;
+		color: #111;
 	}
 	.drawer-body {
 		flex: 1;

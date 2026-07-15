@@ -43,107 +43,94 @@ greet('world');`;
 	}
 </script>
 
-<div class="settings">
-	<h2 class="page-title">Settings</h2>
+<div class="sections">
+	<section class="section">
+		<h3 class="section-title">Appearance</h3>
 
-	<div class="sections">
-		<section class="section">
-			<h3 class="section-title">Appearance</h3>
-
-			<div class="field">
-				<div class="field-label">Default page layout</div>
-				<div class="field-hint">
-					Applied when opening a record. Existing open pages keep their current layout until
-					reopened.
-				</div>
-				<div class="options" role="radiogroup" aria-label="Default page layout">
-					{#each [
-						{ value: 'single', label: 'Single column' },
-						{ value: 'two-centered', label: 'Two columns (centered)' },
-						{ value: 'two-full', label: 'Two columns (full width)' }
-					] as opt (opt.value)}
-						<label class="option" class:active={layout === opt.value}>
-							<input
-								type="radio"
-								name="layout"
-								value={opt.value}
-								checked={layout === opt.value}
-								onchange={() => setLayout(opt.value as LayoutMode)}
-							/>
-							{opt.label}
-						</label>
-					{/each}
-				</div>
+		<div class="field">
+			<div class="field-label">Default page layout</div>
+			<div class="field-hint">
+				Applied when opening a record. Existing open pages keep their current layout until
+				reopened.
 			</div>
-		</section>
-
-		<section class="section">
-			<h3 class="section-title">Code Highlighting</h3>
-			<div class="field">
-				<div class="field-label">Code block theme</div>
-				<div class="field-hint">Applied to syntax-highlighted code blocks in all markdown views.</div>
-				<div class="theme-picker">
-					<select
-						class="theme-select"
-						value={settingsStore.hljsTheme}
-						onchange={(e) => settingsStore.setHljsTheme((e.target as HTMLSelectElement).value)}
-					>
-						<optgroup label="Light">
-							{#each HLJS_THEMES.filter(t => !t.dark) as t (t.value)}
-								<option value={t.value}>{t.label}</option>
-							{/each}
-						</optgroup>
-						<optgroup label="Dark">
-							{#each HLJS_THEMES.filter(t => t.dark) as t (t.value)}
-								<option value={t.value}>{t.label}</option>
-							{/each}
-						</optgroup>
-					</select>
-					<pre class="code-preview"><code class="hljs">{@html hljs.highlight(SAMPLE_CODE, { language: 'javascript' }).value}</code></pre>
-				</div>
+			<div class="options" role="radiogroup" aria-label="Default page layout">
+				{#each [
+					{ value: 'single', label: 'Single column' },
+					{ value: 'two-centered', label: 'Two columns (centered)' },
+					{ value: 'two-full', label: 'Two columns (full width)' }
+				] as opt (opt.value)}
+					<label class="option" class:active={layout === opt.value}>
+						<input
+							type="radio"
+							name="layout"
+							value={opt.value}
+							checked={layout === opt.value}
+							onchange={() => setLayout(opt.value as LayoutMode)}
+						/>
+						{opt.label}
+					</label>
+				{/each}
 			</div>
-		</section>
+		</div>
+	</section>
 
-		{#if buildInfo}
-			<section class="section">
-				<h3 class="section-title">About</h3>
-				<dl class="about-dl">
-					<dt>Version</dt>
-					<dd>{buildInfo.version}</dd>
-					<dt>Commit</dt>
-					<dd><code>{buildInfo.commit}</code></dd>
-					<dt>Build date</dt>
-					<dd>{formatDate(buildInfo.build_date)}</dd>
-				</dl>
-			</section>
-		{/if}
-	</div>
+	<section class="section">
+		<h3 class="section-title">Code Highlighting</h3>
+		<div class="field">
+			<div class="field-label">Code block theme</div>
+			<div class="field-hint">Applied to syntax-highlighted code blocks in all markdown views.</div>
+			<div class="theme-picker">
+				<select
+					class="theme-select"
+					value={settingsStore.hljsTheme}
+					onchange={(e) => settingsStore.setHljsTheme((e.target as HTMLSelectElement).value)}
+				>
+					<optgroup label="Light">
+						{#each HLJS_THEMES.filter(t => !t.dark) as t (t.value)}
+							<option value={t.value}>{t.label}</option>
+						{/each}
+					</optgroup>
+					<optgroup label="Dark">
+						{#each HLJS_THEMES.filter(t => t.dark) as t (t.value)}
+							<option value={t.value}>{t.label}</option>
+						{/each}
+					</optgroup>
+				</select>
+				<pre class="code-preview"><code class="hljs">{@html hljs.highlight(SAMPLE_CODE, { language: 'javascript' }).value}</code></pre>
+			</div>
+		</div>
+	</section>
+
+	{#if buildInfo}
+		<section class="section">
+			<h3 class="section-title">About</h3>
+			<dl class="about-dl">
+				<dt>Version</dt>
+				<dd>{buildInfo.version}</dd>
+				<dt>Commit</dt>
+				<dd><code>{buildInfo.commit}</code></dd>
+				<dt>Build date</dt>
+				<dd>{formatDate(buildInfo.build_date)}</dd>
+			</dl>
+		</section>
+	{/if}
 </div>
 
 <style>
-	.settings {
-		max-width: 640px;
-	}
-	.page-title {
-		margin: 0 0 24px;
-		font-size: 1.4rem;
-		font-weight: 700;
-		color: #111;
-	}
 	.sections {
 		display: flex;
 		flex-direction: column;
-		gap: 32px;
+		gap: 24px;
 	}
 	.section {
 		border: 1px solid #e5e7eb;
 		border-radius: 10px;
-		padding: 20px 24px;
+		padding: 16px 20px;
 		background: #fff;
 	}
 	.section-title {
-		margin: 0 0 20px;
-		font-size: 0.95rem;
+		margin: 0 0 16px;
+		font-size: 0.85rem;
 		font-weight: 600;
 		color: #374151;
 		text-transform: uppercase;
@@ -155,12 +142,12 @@ greet('world');`;
 		gap: 6px;
 	}
 	.field-label {
-		font-size: 0.9rem;
+		font-size: 0.875rem;
 		font-weight: 500;
 		color: #111;
 	}
 	.field-hint {
-		font-size: 0.8rem;
+		font-size: 0.775rem;
 		color: #9ca3af;
 		margin-bottom: 4px;
 	}
@@ -174,10 +161,10 @@ greet('world');`;
 		display: flex;
 		align-items: center;
 		gap: 10px;
-		padding: 9px 12px;
+		padding: 8px 10px;
 		border: 1px solid #e5e7eb;
 		border-radius: 6px;
-		font-size: 0.875rem;
+		font-size: 0.825rem;
 		color: #374151;
 		cursor: pointer;
 		transition: border-color 0.12s, background 0.12s;
@@ -222,7 +209,7 @@ greet('world');`;
 	}
 	.theme-select {
 		width: 100%;
-		padding: 8px 10px;
+		padding: 7px 10px;
 		border: 1px solid #d1d5db;
 		border-radius: 6px;
 		font-size: 0.875rem;
@@ -241,12 +228,12 @@ greet('world');`;
 		margin: 0;
 		border-radius: 6px;
 		overflow: hidden;
-		font-size: 0.8rem;
+		font-size: 0.775rem;
 		line-height: 1.5;
 	}
 	.code-preview .hljs {
 		display: block;
-		padding: 12px 14px;
+		padding: 10px 12px;
 		border-radius: 6px;
 	}
 </style>
