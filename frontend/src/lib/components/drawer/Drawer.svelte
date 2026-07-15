@@ -88,6 +88,7 @@
 		flex-direction: column;
 		transform: translateX(100%);
 		transition: transform 0.2s ease;
+		font-family: system-ui, sans-serif;
 		/* Always in the DOM so the transition plays */
 	}
 	.drawer.open {
