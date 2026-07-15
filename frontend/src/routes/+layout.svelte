@@ -118,6 +118,11 @@
 			</div>
 		{/if}
 
+		<a
+			href="/settings"
+			class="settings-link"
+			class:active={$page.url.pathname === '/settings'}
+		>Settings</a>
 		<SyncBadge />
 		<BuildBadge />
 	</header>
@@ -248,5 +253,22 @@
 	.repair-msg {
 		font-size: 0.75rem;
 		color: #6b7280;
+	}
+	.settings-link {
+		font-size: 0.8rem;
+		color: #6b7280;
+		text-decoration: none;
+		padding: 4px 8px;
+		border-radius: 4px;
+		white-space: nowrap;
+		transition: color 0.12s, background 0.12s;
+	}
+	.settings-link:hover {
+		color: #374151;
+		background: #f3f4f6;
+	}
+	.settings-link.active {
+		color: #6366f1;
+		font-weight: 500;
 	}
 </style>

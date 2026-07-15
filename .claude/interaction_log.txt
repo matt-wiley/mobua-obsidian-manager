@@ -189,3 +189,4 @@
 2026-07-15 18:21 | Claude committed and pushed the markdown parser fix as `6bde6b1`, reminding the user to manually re-index affected notes via the "Repair index" footer button to apply the corrected parsing logic.
 2026-07-15 18:31 | Claude updated three documentation files and created a new pass log to document a fence-aware parser fix while explicitly surfacing the preamble-drop limitation as a known gap across the project's entry point and health tracking.
 2026-07-15 18:31 | Claude documented the markdown parser fix across the wiki (parser.md, wiki-health.md, INDEX.md, and a new pass log) to highlight the fence-aware section detection improvement while explicitly surfacing the remaining preamble-drop limitation as a known gap.
+2026-07-15 18:32 | Claude pushed the documentation updates as commit `8d6a9d4` to the repository.
