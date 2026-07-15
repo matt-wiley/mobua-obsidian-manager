@@ -195,3 +195,4 @@
 2026-07-15 19:45 | Claude pushed three commits enabling a code highlighting theme selector with nine themes available in Settings, persisted across reloads, and applied globally to all markdown views (`ada5e72`).
 2026-07-15 23:36 | Claude fixed CSS specificity issues in the code highlighting component (`b39cc5c`) by narrowing scoped selectors to exclude `.hljs` elements and removing hardcoded backgrounds from `pre` and `pre code.hljs`, allowing the dynamically-loaded theme styles to properly apply.
 2026-07-15 23:40 | Claude converted Settings from a dedicated route to a slide-over drawer panel accessible via the header button, eliminating the `/settings` route and allowing users to toggle it open/closed with click or Escape (`c4fb46b`).
+2026-07-15 23:41 | Claude fixed the Settings drawer font styling by moving `.drawer` inside `.app-shell` so the `font-family` cascade applies correctly.

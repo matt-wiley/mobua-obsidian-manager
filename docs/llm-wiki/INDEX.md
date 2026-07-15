@@ -1,5 +1,5 @@
 # Project Wiki Index
-_updated: 2026-07-15 (pass 06)_
+_updated: 2026-07-15 (pass 07)_
 
 ## Project in One Paragraph
 mobua-obsidian-manager is a "Notion Lite" web UI over an Obsidian vault. `.md` files are the **only** source of truth ([[markdown-source-of-truth]]); SQLite is a rebuildable index. Stack: FastAPI backend → SQLite (WAL) → SvelteKit frontend. Writes go UI → `writer.py` (atomic `.md` write) → `watcher.py` → `parser.py` + `indexer.py` → SQLite → SSE → Svelte store → re-render, targeting <500ms from save to UI. The schema is emergent ([[emergent-schema]]): folder = table, file = record, frontmatter keys + H2 headings = fields.
@@ -13,6 +13,7 @@ mobua-obsidian-manager is a "Notion Lite" web UI over an Obsidian vault. `.md` f
 - [[live-file-surgical-writes]] — updates read the live file + splice; never regenerate from the index.
 - [[git-tag-versioning]] — one app version from git tags; bump via `make release`.
 - [[canonical-field-options]] — fields can pin a fixed option list in-vault; the one exception to emergent schema.
+- [[settings-in-drawer]] — settings live in the drawer panel, not a `/settings` route; preserves view context.
 
 ## Patterns
 - [[all-sql-in-queries]] — all backend SQL in `db/queries.py`.
@@ -37,6 +38,7 @@ mobua-obsidian-manager is a "Notion Lite" web UI over an Obsidian vault. `.md` f
 - [[sse-event-flow]] — `/events` push chain + heartbeat.
 - [[build-info-endpoint]] — `/api/meta` + About badge; live-git-favoring version resolution.
 - [[vault-registry]] — multi-workspace lifecycle; per-vault DB; non-destructive remove.
+- [[drawer]] — slide-in panel with `'record' | 'settings'` modes; mounts outside `.app-shell` (CSS inheritance gotcha).
 
 ## Concept Clusters
 - **write path**: [[markdown-source-of-truth]], [[atomic-md-writes]], [[live-file-surgical-writes]], [[writer]], [[atomic-write-delete-debounce]]
@@ -46,6 +48,7 @@ mobua-obsidian-manager is a "Notion Lite" web UI over an Obsidian vault. `.md` f
 - **layering conventions**: [[all-sql-in-queries]], [[all-fetch-in-lib-api]]
 - **versioning / build info**: [[git-tag-versioning]], [[build-info-endpoint]]
 - **workspaces**: [[vault-registry]], [[watcher]], [[sse-event-flow]]
+- **UI panels**: [[drawer]], [[wikilink-navigation]], [[settings-in-drawer]]
 
 ## Cross-References
 - [[atomic-md-writes]] → [[atomic-write-delete-debounce]]: the atomic swap fires delete+create, which the watcher must debounce.
@@ -57,6 +60,8 @@ mobua-obsidian-manager is a "Notion Lite" web UI over an Obsidian vault. `.md` f
 - [[git-tag-versioning]] → [[build-info-endpoint]]: the tag is the source; `/api/meta` resolves and exposes it, favoring live git over stale install metadata.
 - [[vault-registry]] → [[markdown-source-of-truth]]: removing a workspace only stops the watcher + drops the registry entry; the source `.md` files are never touched (rebuildable index makes this safe).
 - [[vault-registry]] → [[watcher]]: each active vault owns one watcher; `activate` starts it, `deactivate` stops+joins it.
+- [[settings-in-drawer]] → [[drawer]]: the decision to avoid a `/settings` route is what gave the drawer its `mode` field.
+- [[wikilink-navigation]] → [[drawer]]: wikilink click opens the drawer in record mode; the header Settings button opens it in settings mode.
 
 ## File ↔ Concept Bindings
 - `backend/obsidian_manager/sync/parser.py` → [[parser]], [[frontmatter-type-inference]]
@@ -72,12 +77,13 @@ mobua-obsidian-manager is a "Notion Lite" web UI over an Obsidian vault. `.md` f
 - `frontend/src/lib/components/fields/` → [[one-component-per-field-type]], [[relation-field-resolution]]
 - `frontend/src/lib/components/shared/SyncBadge.svelte` → [[sync-badge-states]]
 - `backend/obsidian_manager/_buildinfo.py`, `backend/obsidian_manager/api/meta.py` → [[build-info-endpoint]], [[git-tag-versioning]]
-- `frontend/src/lib/components/shared/BuildBadge.svelte`, `frontend/src/lib/api/meta.ts` → [[build-info-endpoint]]
+- `frontend/src/lib/api/meta.ts` → [[build-info-endpoint]]
 - `backend/obsidian_manager/vault.py`, `backend/obsidian_manager/api/config.py` → [[vault-registry]]
 - `frontend/src/lib/api/config.ts`, `frontend/src/routes/+page.svelte`, `frontend/src/routes/setup/+page.svelte` → [[vault-registry]]
+- `frontend/src/lib/components/drawer/Drawer.svelte`, `frontend/src/lib/components/drawer/SettingsPanel.svelte`, `frontend/src/lib/stores/drawer.svelte.ts` → [[drawer]], [[settings-in-drawer]], [[wikilink-navigation]]
 
 ## Known Gaps
 - **Parser preamble-drop**: content before the first `## ` heading is silently discarded; invisible in the UI. Documented in [[parser]]; not yet fixed.
-- Frontend stores (`records`, `schema`, `drawer`) not yet documented as their own pages.
+- Frontend stores (`records`, `schema`, `sync`) not yet documented as their own pages. (`drawer` now covered by [[drawer]].)
 - `col_widths` persistence and column-resize UI undocumented.
 - `api/records.py` / `api/folders.py` HTTP surface (routes, payloads) not yet captured.
