@@ -1,4 +1,7 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
+	import { getBuildInfo, type BuildInfo } from '$lib/api/meta';
+
 	const LAYOUT_KEY = 'pageview-layout-mode';
 	type LayoutMode = 'single' | 'two-centered' | 'two-full';
 
@@ -12,6 +15,22 @@
 	function setLayout(mode: LayoutMode) {
 		layout = mode;
 		localStorage.setItem(LAYOUT_KEY, mode);
+	}
+
+	let buildInfo = $state<BuildInfo | null>(null);
+
+	onMount(async () => {
+		try {
+			buildInfo = await getBuildInfo();
+		} catch {
+			// non-essential
+		}
+	});
+
+	function formatDate(iso: string | null): string {
+		if (!iso) return '—';
+		const d = new Date(iso);
+		return isNaN(d.getTime()) ? iso : d.toLocaleString();
 	}
 </script>
 
@@ -48,6 +67,20 @@
 				</div>
 			</div>
 		</section>
+
+		{#if buildInfo}
+			<section class="section">
+				<h3 class="section-title">About</h3>
+				<dl class="about-dl">
+					<dt>Version</dt>
+					<dd>{buildInfo.version}</dd>
+					<dt>Commit</dt>
+					<dd><code>{buildInfo.commit}</code></dd>
+					<dt>Build date</dt>
+					<dd>{formatDate(buildInfo.build_date)}</dd>
+				</dl>
+			</section>
+		{/if}
 	</div>
 </div>
 
@@ -125,5 +158,24 @@
 	}
 	.option input[type='radio'] {
 		accent-color: #6366f1;
+	}
+	.about-dl {
+		display: grid;
+		grid-template-columns: auto 1fr;
+		gap: 8px 20px;
+		margin: 0;
+		font-size: 0.875rem;
+	}
+	.about-dl dt {
+		color: #6b7280;
+	}
+	.about-dl dd {
+		margin: 0;
+		color: #111;
+		word-break: break-all;
+	}
+	.about-dl code {
+		font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+		font-size: 0.8rem;
 	}
 </style>
