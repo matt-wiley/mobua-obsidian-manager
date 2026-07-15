@@ -3,13 +3,37 @@
 	import { page } from '$app/stores';
 	import favicon from '$lib/assets/favicon.svg';
 	import SyncBadge from '$lib/components/shared/SyncBadge.svelte';
-
 	import Drawer from '$lib/components/drawer/Drawer.svelte';
 	import { syncStore } from '$lib/stores/sync.svelte';
 	import { recordsStore } from '$lib/stores/records.svelte';
 	import { apiFetch } from '$lib/api/client';
 	import { getConfig, type VaultInfo } from '$lib/api/config';
 	import { goto } from '$app/navigation';
+	import { settingsStore } from '$lib/stores/settings.svelte';
+
+	import github           from 'highlight.js/styles/github.css?url';
+	import githubDark       from 'highlight.js/styles/github-dark.css?url';
+	import atomLight        from 'highlight.js/styles/atom-one-light.css?url';
+	import atomDark         from 'highlight.js/styles/atom-one-dark.css?url';
+	import monokai          from 'highlight.js/styles/monokai.css?url';
+	import vs               from 'highlight.js/styles/vs.css?url';
+	import vs2015           from 'highlight.js/styles/vs2015.css?url';
+	import tokyoNightLight  from 'highlight.js/styles/tokyo-night-light.css?url';
+	import tokyoNightDark   from 'highlight.js/styles/tokyo-night-dark.css?url';
+
+	const THEME_URLS: Record<string, string> = {
+		'github':            github,
+		'github-dark':       githubDark,
+		'atom-one-light':    atomLight,
+		'atom-one-dark':     atomDark,
+		'monokai':           monokai,
+		'vs':                vs,
+		'vs2015':            vs2015,
+		'tokyo-night-light': tokyoNightLight,
+		'tokyo-night-dark':  tokyoNightDark,
+	};
+
+	const hljsThemeUrl = $derived(THEME_URLS[settingsStore.hljsTheme] ?? github);
 
 	let { children } = $props();
 
@@ -88,6 +112,7 @@
 
 <svelte:head>
 	<link rel="icon" href={favicon} />
+	<link rel="stylesheet" href={hljsThemeUrl} />
 </svelte:head>
 
 <svelte:document onclick={closeSwitcher} />

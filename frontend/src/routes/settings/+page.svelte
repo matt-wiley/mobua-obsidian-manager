@@ -1,6 +1,15 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { getBuildInfo, type BuildInfo } from '$lib/api/meta';
+	import hljs from 'highlight.js';
+	import { settingsStore, HLJS_THEMES } from '$lib/stores/settings.svelte';
+
+	const SAMPLE_CODE = `function greet(name) {
+  const msg = \`Hello, \${name}!\`;
+  return msg;
+}
+
+greet('world');`;
 
 	const LAYOUT_KEY = 'pageview-layout-mode';
 	type LayoutMode = 'single' | 'two-centered' | 'two-full';
@@ -64,6 +73,33 @@
 							{opt.label}
 						</label>
 					{/each}
+				</div>
+			</div>
+		</section>
+
+		<section class="section">
+			<h3 class="section-title">Code Highlighting</h3>
+			<div class="field">
+				<div class="field-label">Code block theme</div>
+				<div class="field-hint">Applied to syntax-highlighted code blocks in all markdown views.</div>
+				<div class="theme-picker">
+					<select
+						class="theme-select"
+						value={settingsStore.hljsTheme}
+						onchange={(e) => settingsStore.setHljsTheme((e.target as HTMLSelectElement).value)}
+					>
+						<optgroup label="Light">
+							{#each HLJS_THEMES.filter(t => !t.dark) as t (t.value)}
+								<option value={t.value}>{t.label}</option>
+							{/each}
+						</optgroup>
+						<optgroup label="Dark">
+							{#each HLJS_THEMES.filter(t => t.dark) as t (t.value)}
+								<option value={t.value}>{t.label}</option>
+							{/each}
+						</optgroup>
+					</select>
+					<pre class="code-preview"><code class="hljs">{@html hljs.highlight(SAMPLE_CODE, { language: 'javascript' }).value}</code></pre>
 				</div>
 			</div>
 		</section>
@@ -177,5 +213,40 @@
 	.about-dl code {
 		font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
 		font-size: 0.8rem;
+	}
+	.theme-picker {
+		display: flex;
+		flex-direction: column;
+		gap: 10px;
+		margin-top: 4px;
+	}
+	.theme-select {
+		width: 100%;
+		padding: 8px 10px;
+		border: 1px solid #d1d5db;
+		border-radius: 6px;
+		font-size: 0.875rem;
+		font-family: inherit;
+		color: #374151;
+		background: #fff;
+		outline: none;
+		cursor: pointer;
+		transition: border-color 0.12s;
+	}
+	.theme-select:focus {
+		border-color: #6366f1;
+		box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+	}
+	.code-preview {
+		margin: 0;
+		border-radius: 6px;
+		overflow: hidden;
+		font-size: 0.8rem;
+		line-height: 1.5;
+	}
+	.code-preview .hljs {
+		display: block;
+		padding: 12px 14px;
+		border-radius: 6px;
 	}
 </style>

@@ -149,8 +149,6 @@
 {/if}
 
 <style>
-	@import 'highlight.js/styles/github.css';
-
 	.editor-wrap {
 		width: 100%;
 	}
