@@ -3,7 +3,7 @@
 import pytest
 from pathlib import Path
 
-from obsidian_manager.sync.parser import parse_file, infer_type
+from obsidian_manager.sync.parser import parse_file, infer_type, _parse_sections
 
 
 VAULT = Path(__file__).parent.parent.parent / ".local" / "test-vault"
@@ -65,6 +65,81 @@ class TestParseFile:
         result = parse_file(VAULT / "Areas" / "Engineering.md", VAULT)
         # May or may not have sections — just assert it's a dict
         assert isinstance(result["sections"], dict)
+
+
+# ---------------------------------------------------------------------------
+# _parse_sections — unit tests (fence-awareness)
+# ---------------------------------------------------------------------------
+
+class TestParseSections:
+    def test_basic_two_sections(self):
+        body = "## Alpha\n\nfoo\n\n## Beta\n\nbar"
+        result = _parse_sections(body)
+        assert list(result.keys()) == ["Alpha", "Beta"]
+        assert result["Alpha"] == "foo"
+        assert result["Beta"] == "bar"
+
+    def test_h2_inside_backtick_fence_ignored(self):
+        body = (
+            "## Section\n\n"
+            "```markdown\n"
+            "## fake heading inside fence\n"
+            "```\n\n"
+            "after fence"
+        )
+        result = _parse_sections(body)
+        assert list(result.keys()) == ["Section"]
+        assert "## fake heading inside fence" in result["Section"]
+        assert "after fence" in result["Section"]
+
+    def test_h2_inside_tilde_fence_ignored(self):
+        body = (
+            "## Section\n\n"
+            "~~~python\n"
+            "## not a heading\n"
+            "~~~\n\n"
+            "tail"
+        )
+        result = _parse_sections(body)
+        assert list(result.keys()) == ["Section"]
+        assert "## not a heading" in result["Section"]
+
+    def test_longer_closing_fence_closes_block(self):
+        # Opening ``` closed by ```` (longer fence — valid CommonMark)
+        body = (
+            "## S\n\n"
+            "````\n"
+            "## inside\n"
+            "````\n\n"
+            "outside"
+        )
+        result = _parse_sections(body)
+        assert list(result.keys()) == ["S"]
+        assert "## inside" in result["S"]
+        assert "outside" in result["S"]
+
+    def test_real_h2_after_fence_creates_new_section(self):
+        body = (
+            "## First\n\n"
+            "```\n## inside\n```\n\n"
+            "## Second\n\n"
+            "content"
+        )
+        result = _parse_sections(body)
+        assert list(result.keys()) == ["First", "Second"]
+        assert result["Second"] == "content"
+
+    def test_unclosed_fence_treats_rest_as_content(self):
+        body = "## S\n\n```\n## inside unclosed\nno closing fence"
+        result = _parse_sections(body)
+        assert list(result.keys()) == ["S"]
+        assert "## inside unclosed" in result["S"]
+
+    def test_fence_in_preamble_does_not_create_section(self):
+        body = "# Title\n\n```\n## preamble fake\n```\n\n## Real\n\nok"
+        result = _parse_sections(body)
+        assert list(result.keys()) == ["Real"]
+        assert result["Real"] == "ok"
 
 
 # ---------------------------------------------------------------------------

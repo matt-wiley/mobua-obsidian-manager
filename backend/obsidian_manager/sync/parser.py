@@ -20,6 +20,9 @@ logger = logging.getLogger(__name__)
 
 _WIKILINK_RE = re.compile(r"\[\[(.+?)\]\]")
 _DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+# Matches the opening or closing line of a fenced code block (``` or ~~~),
+# with up to three leading spaces of indentation (CommonMark §4.5).
+_FENCE_RE = re.compile(r"^[ \t]{0,3}(`{3,}|~{3,})")
 
 
 # ---------------------------------------------------------------------------
@@ -82,20 +85,38 @@ def _folder_path(file_path: Path, vault_path: Path) -> str:
 
 
 def _parse_sections(body: str) -> dict[str, str]:
-    """Split markdown body on H2 headings. Returns { heading: content }."""
+    """Split markdown body on H2 headings. Returns { heading: content }.
+
+    H2 lines inside fenced code blocks (``` or ~~~) are treated as content,
+    not section separators.
+    """
     sections: dict[str, str] = {}
     current_heading: str | None = None
     current_lines: list[str] = []
+    fence: str | None = None  # opening fence chars (e.g. '```') while inside a block
 
     for line in body.splitlines():
-        if line.startswith("## "):
-            if current_heading is not None:
-                sections[current_heading] = "\n".join(current_lines).strip()
-            current_heading = line[3:].strip()
-            current_lines = []
-        else:
+        if fence is not None:
+            # Inside a fenced block — only exit on a matching closing fence.
+            m = _FENCE_RE.match(line)
+            if m and m.group(1)[0] == fence[0] and len(m.group(1)) >= len(fence):
+                fence = None
             if current_heading is not None:
                 current_lines.append(line)
+        else:
+            m = _FENCE_RE.match(line)
+            if m:
+                fence = m.group(1)
+                if current_heading is not None:
+                    current_lines.append(line)
+            elif line.startswith("## "):
+                if current_heading is not None:
+                    sections[current_heading] = "\n".join(current_lines).strip()
+                current_heading = line[3:].strip()
+                current_lines = []
+            else:
+                if current_heading is not None:
+                    current_lines.append(line)
 
     if current_heading is not None:
         sections[current_heading] = "\n".join(current_lines).strip()
