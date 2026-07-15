@@ -1,12 +1,13 @@
 # Wiki Health
-_updated: 2026-07-13 (pass 05)_
+_updated: 2026-07-15 (pass 06)_
 
 wiki_path: ./docs/llm-wiki/
 
 ## Current Status
-Healthy (pass 05, 2026-07-13). 23 pages across 4 types (5 decision, 5 pattern, 6 concept, 7 component). All pages ≤100 lines. INDEX reachable to every page in ≤2 hops. `relates:`↔inline mirrors verified consistent. Pass 05 added [[canonical-field-options]] — the first deliberate exception to emergent schema: a field can pin a fixed option list in `<vault>/.obsidian-manager/schema.yaml`, merged into the schema endpoint so retired enum values stay selectable.
+Healthy (pass 06, 2026-07-15). 23 pages across 4 types (5 decision, 5 pattern, 6 concept, 7 component). All pages ≤100 lines. INDEX reachable to every page in ≤2 hops. `relates:`↔inline mirrors consistent. Pass 06 updated [[parser]] with the fence-aware `_parse_sections` fix (commit 6bde6b1) and explicitly documented the preamble-drop limitation.
 
 ## Known Gaps
+- **Parser preamble-drop**: content before the first `## ` heading is silently discarded and invisible in the UI. Documented in [[parser]]; not yet fixed.
 - Frontend stores (`records`, `schema`, `drawer`, `sync`) not documented as pages.
 - HTTP API surface (`api/records.py`, `api/folders.py`, `api/sync.py`) — routes/payloads uncaptured (`api/config.py` now covered by [[vault-registry]]).
 - `col_widths` / column-resize persistence undocumented.

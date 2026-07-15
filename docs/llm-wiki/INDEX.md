@@ -1,5 +1,5 @@
 # Project Wiki Index
-_updated: 2026-07-13 (pass 05)_
+_updated: 2026-07-15 (pass 06)_
 
 ## Project in One Paragraph
 mobua-obsidian-manager is a "Notion Lite" web UI over an Obsidian vault. `.md` files are the **only** source of truth ([[markdown-source-of-truth]]); SQLite is a rebuildable index. Stack: FastAPI backend → SQLite (WAL) → SvelteKit frontend. Writes go UI → `writer.py` (atomic `.md` write) → `watcher.py` → `parser.py` + `indexer.py` → SQLite → SSE → Svelte store → re-render, targeting <500ms from save to UI. The schema is emergent ([[emergent-schema]]): folder = table, file = record, frontmatter keys + H2 headings = fields.
@@ -77,6 +77,7 @@ mobua-obsidian-manager is a "Notion Lite" web UI over an Obsidian vault. `.md` f
 - `frontend/src/lib/api/config.ts`, `frontend/src/routes/+page.svelte`, `frontend/src/routes/setup/+page.svelte` → [[vault-registry]]
 
 ## Known Gaps
+- **Parser preamble-drop**: content before the first `## ` heading is silently discarded; invisible in the UI. Documented in [[parser]]; not yet fixed.
 - Frontend stores (`records`, `schema`, `drawer`) not yet documented as their own pages.
 - `col_widths` persistence and column-resize UI undocumented.
 - `api/records.py` / `api/folders.py` HTTP surface (routes, payloads) not yet captured.
